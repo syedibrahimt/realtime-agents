@@ -1,0 +1,80 @@
+{
+  "topic": "Maths",
+  "title": "Order of Operations",
+  "problem": "2 + (8 - 3) × 4 ÷ 2",
+  "options": "Option A: 12, Option B: 18, Option C: 22, Option D: 16",
+  "steps": [
+    {
+      "step": 1,
+      "description": "Which operation should we do first?",
+      "stepTitle": "Solving Parentheses First",
+      "conceptual_questions": [
+        {
+          "goal": "Understand PEMDAS rule.",
+          "question": "In the order of operations (PEMDAS), which type of operation always comes first?"
+        },
+        {
+          "goal": "Identify and solve parentheses in this problem.",
+          "question": "Looking at our expression 2 + (8 - 3) × 4 ÷ 2, which part should we calculate first and what is its value?"
+        }
+      ],
+      "notes": {
+        "description": "We solved the expression inside the parentheses first.",
+        "updated_expression": "2 + 5 × 4 ÷ 2"
+      }
+    },
+    {
+      "step": 2,
+      "description": "Now let's handle multiplication and division.",
+      "stepTitle": "Multiplication and Division Left to Right",
+      "conceptual_questions": [
+        {
+          "goal": "Understand multiplication and division priority.",
+          "question": "After parentheses, which operations have equal priority and how should they be solved?"
+        },
+        {
+          "goal": "Identify and perform the first multiplication in this problem.",
+          "question": "In our expression 2 + 5 × 4 ÷ 2, which operation should we do first and what is the result?"
+        }
+      ],
+      "notes": {
+        "description": "We performed the multiplication operation, working left to right.",
+        "updated_expression": "2 + 20 ÷ 2"
+      }
+    },
+    {
+      "step": 3,
+      "description": "Let's complete the division.",
+      "stepTitle": "Completing Division",
+      "conceptual_questions": [
+        {
+          "goal": "Apply the rule and perform division in this problem.",
+          "question": "In our expression 2 + 20 ÷ 2, what should we perform next and what is the value?"
+        }
+      ],
+      "notes": {
+        "description": "We completed the division operation.",
+        "updated_expression": "2 + 10"
+      }
+    },
+    {
+      "step": 4,
+      "description": "Finally, let's add.",
+      "stepTitle": "Final Addition",
+      "conceptual_questions": [
+        {
+          "goal": "Understand when addition is performed in PEMDAS.",
+          "question": "In the order of operations, when do we perform addition and subtraction?"
+        },
+        {
+          "goal": "Complete the final calculation in this problem.",
+          "question": "Looking at our simplified expression 2 + 10, what is the final answer?"
+        }
+      ],
+      "notes": {
+        "description": "We completed the final addition to get our answer.",
+        "updated_expression": "12"
+      }
+    }
+  ]
+}
