@@ -1,0 +1,238 @@
+{
+  "topic": "Maths",
+  "title": "Order of Operations",
+  "problem": "8 + (6 ÷ 2 × (3 + 1)) - 5",
+  "options": "Option A: 12, Option B: 18, Option C: 15, Option D: 16",
+  "steps": [
+    {
+      "step": 1,
+      "description": "Let's look at our problem. We see some numbers inside parentheses ( ).  In math, we always do what's inside the parentheses first. It's like opening a present before we play with the toy inside!",
+      "updated_expression": "8 + (6 ÷ 2 × (3 + 1)) - 5",
+      "calculation": "(3 + 1) = 4",
+      "stepTitle": "Parentheses First!",
+      "conceptual_questions": [
+        {
+          "goal": "Ensure the student identifies the numbers within the innermost parentheses.",
+          "question": "What numbers are inside the innermost parentheses?",
+          "hint": {
+            "content": "🤔",
+            "label": "What's inside the parentheses?",
+            "type": "emoji"
+          },
+          "success": {
+            "content": "✅",
+            "label": "Great job!",
+            "type": "emoji"
+          }
+        },
+        {
+          "goal": "Ensure the student identifies the addition operation.",
+          "question": "What math operation should we perform inside the parentheses?",
+          "hint": {
+            "content": "🔄",
+            "label": "Remember, solve what's in the parentheses first!",
+            "type": "emoji"
+          },
+          "success": {
+            "content": "✅",
+            "label": "Great job!",
+            "type": "emoji"
+          }
+        }
+      ],
+      "notes": {
+        "description": "We solve the innermost parentheses first. <span class='annotate' data-tooltip='(3 + 1) = 4'>(3 + 1)</span> is solved.",
+        "updated_expression": "8 + (6 ÷ 2 × 4) - 5"
+      },
+      "illustration": {
+        "content": "(3 + 1)",
+        "label": "The innermost parentheses",
+        "type": "text"
+      }
+    },
+    {
+      "step": 2,
+      "description": "Great! Now we continue inside the parentheses. Remember, multiplication and division come before addition and subtraction, and we solve from left to right!",
+      "updated_expression": "8 + (6 ÷ 2 × 4) - 5",
+      "calculation": "6 ÷ 2 = 3",
+      "stepTitle": "Division",
+      "conceptual_questions": [
+        {
+          "goal": "Ensure the student identifies the division operation.",
+          "question": "What operation comes next inside the parentheses?",
+          "hint": {
+            "content": "🤔",
+            "label": "Which operation comes next?",
+            "type": "emoji"
+          },
+          "success": {
+            "content": "✅",
+            "label": "Well done!",
+            "type": "emoji"
+          }
+        },
+        {
+          "goal": "Ensure the student correctly identifies the numbers involved in the division.",
+          "question": "What numbers are we dividing?",
+          "hint": {
+            "content": "🔄",
+            "label": "Remember the order: Parentheses, Multiplication/Division (left to right), Addition/Subtraction (left to right)",
+            "type": "emoji"
+          },
+          "success": {
+            "content": "✅",
+            "label": "Well done!",
+            "type": "emoji"
+          }
+        }
+      ],
+      "notes": {
+        "description": "Next, we perform the division inside the parentheses. <span class='annotate' data-tooltip='6 ÷ 2 = 3'>6 ÷ 2</span> is solved.",
+        "updated_expression": "8 + (3 × 4) - 5"
+      },
+      "illustration": {
+        "content": "6 ÷ 2",
+        "label": "The division operation",
+        "type": "text"
+      }
+    },
+    {
+      "step": 3,
+      "description": "Excellent! We're still inside the parentheses. What's the next operation we need to do?",
+      "updated_expression": "8 + (3 × 4) - 5",
+      "calculation": "3 × 4 = 12",
+      "stepTitle": "Multiplication",
+      "conceptual_questions": [
+        {
+          "goal": "Ensure the student identifies the multiplication operation.",
+          "question": "What operation is left to perform within the parentheses?",
+          "hint": {
+            "content": "🤔",
+            "label": "What's the next operation?",
+            "type": "emoji"
+          },
+          "success": {
+            "content": "✅",
+            "label": "Great job!",
+            "type": "emoji"
+          }
+        },
+        {
+          "goal": "Ensure the student performs the multiplication correctly.",
+          "question": "What is the result of this multiplication?",
+          "hint": {
+            "content": "🔄",
+            "label": "It's the only operation left in the parentheses!",
+            "type": "emoji"
+          },
+          "success": {
+            "content": "✅",
+            "label": "Great job!",
+            "type": "emoji"
+          }
+        }
+      ],
+      "notes": {
+        "description": "Now we perform the multiplication inside the parentheses. <span class='annotate' data-tooltip='3 × 4 = 12'>3 × 4</span> is solved.",
+        "updated_expression": "8 + 12 - 5"
+      },
+      "illustration": {
+        "content": "3 × 4",
+        "label": "The multiplication operation",
+        "type": "text"
+      }
+    },
+    {
+      "step": 4,
+      "description": "Great job! Now that the parentheses are solved, we can move on to the rest of the problem. What's the next operation we should perform?",
+      "updated_expression": "8 + 12 - 5",
+      "calculation": "8 + 12 = 20",
+      "stepTitle": "Addition",
+      "conceptual_questions": [
+        {
+          "goal": "Ensure the student correctly identifies addition as the next operation.",
+          "question": "What's the next operation we should complete?",
+          "hint": {
+            "content": "🤔",
+            "label": "What operation comes next?",
+            "type": "emoji"
+          },
+          "success": {
+            "content": "✅",
+            "label": "Excellent work!",
+            "type": "emoji"
+          }
+        },
+        {
+          "goal": "Ensure the student performs the addition correctly.",
+          "question": "What is the result of this addition?",
+          "hint": {
+            "content": "🔄",
+            "label": "Remember to solve from left to right!",
+            "type": "emoji"
+          },
+          "success": {
+            "content": "✅",
+            "label": "Excellent work!",
+            "type": "emoji"
+          }
+        }
+      ],
+      "notes": {
+        "description": "Now we perform the addition. <span class='annotate' data-tooltip='8 + 12 = 20'>8 + 12</span> is solved.",
+        "updated_expression": "20 - 5"
+      },
+      "illustration": {
+        "content": "8 + 12",
+        "label": "The addition operation",
+        "type": "text"
+      }
+    },
+    {
+      "step": 5,
+      "description": "Almost there! What's our final step?",
+      "updated_expression": "20 - 5",
+      "calculation": "20 - 5 = 15",
+      "stepTitle": "Subtraction",
+      "conceptual_questions": [
+        {
+          "goal": "Ensure the student identifies the subtraction operation.",
+          "question": "What operation remains to be solved?",
+          "hint": {
+            "content": "🤔",
+            "label": "What's the final operation?",
+            "type": "emoji"
+          },
+          "success": {
+            "content": "✅",
+            "label": "You did it!",
+            "type": "emoji"
+          }
+        },
+        {
+          "goal": "Ensure the student arrives at the final solution.",
+          "question": "What is the result of this subtraction?",
+          "hint": {
+            "content": "🔄",
+            "label": "This will give us our final answer!",
+            "type": "emoji"
+          },
+          "success": {
+            "content": "✅",
+            "label": "You did it!",
+            "type": "emoji"
+          }
+        }
+      ],
+      "notes": {
+        "description": "Finally, we perform the subtraction. <span class='annotate' data-tooltip='20 - 5 = 15'>20 - 5</span> is solved.",
+        "updated_expression": 15
+      },
+      "illustration": {
+        "content": "20 - 5",
+        "label": "The subtraction operation",
+        "type": "text"
+      }
+    }
+  ]
+}
