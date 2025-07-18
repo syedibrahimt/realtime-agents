@@ -2,7 +2,7 @@ import { useState, useEffect, useRef, useCallback } from "react"
 import { RealtimeSession } from "@openai/agents-realtime"
 import "./App.css"
 import "./visualFeedback.css"
-import { OPENAI_API_URL, OPENAI_API_KEY } from "../const"
+import { OPENAI_API_URL } from "../const"
 import { aiTutoring } from "./agents/tutor"
 import mathData from "../hard2.json" // Updated to use hard2.json
 
@@ -514,7 +514,7 @@ function App() {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        Authorization: `Bearer ${OPENAI_API_KEY}`,
+        Authorization: `Bearer ${}`,
       },
       body: JSON.stringify({
         model: "gpt-4o-realtime-preview-2025-06-03",
