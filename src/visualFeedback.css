@@ -1,0 +1,143 @@
+/* Visual Feedback Styles */
+.visual-feedback-container {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  z-index: 100;
+  pointer-events: none;
+}
+
+.visual-feedback {
+  background-color: rgba(16, 23, 42, 0.95);
+  border-radius: 16px;
+  padding: 20px 30px;
+  margin-bottom: 0;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  text-align: center;
+  min-width: 320px;
+  max-width: 80%;
+  animation: fadeIn 0.5s ease-out;
+  position: relative;
+  overflow: hidden;
+}
+
+/* Specific feedback type styles */
+.visual-feedback.hint {
+  border-left: 5px solid #fbbf24; /* Yellow for hints */
+  box-shadow: 0 0 20px rgba(251, 191, 36, 0.2);
+}
+
+.visual-feedback.success {
+  border-left: 5px solid #4ade80; /* Green for success */
+  box-shadow: 0 0 20px rgba(74, 222, 128, 0.2);
+}
+
+.visual-feedback.illustration {
+  border-left: 5px solid #60a5fa; /* Blue for illustrations */
+  box-shadow: 0 0 20px rgba(96, 165, 250, 0.2);
+}
+
+.feedback-content {
+  font-size: 20px;
+  font-weight: 500;
+  margin-bottom: 12px;
+  color: #e2e8f0;
+}
+
+.feedback-emoji {
+  font-size: 64px;
+  display: block;
+  margin: 10px 0 20px;
+  line-height: 1;
+}
+
+.feedback-text {
+  font-size: 20px;
+  line-height: 1.5;
+  margin: 10px 0;
+}
+
+.feedback-label {
+  font-size: 16px;
+  color: #a3b1cc;
+  font-weight: 400;
+  margin-top: 5px;
+}
+
+/* Animation for visual feedback */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px) scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes pulse {
+  0% {
+    transform: scale(1);
+    opacity: 1;
+  }
+  50% {
+    transform: scale(1.05);
+    opacity: 1;
+  }
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+/* Add pulse animation to emoji feedback */
+.feedback-emoji {
+  animation: pulse 2s infinite ease-in-out;
+}
+
+/* Make the visual feedback container clearer against the background */
+.video-frame {
+  position: relative;
+}
+
+/* Fix z-index issues */
+.visual-feedback-container {
+  z-index: 100;
+}
+
+/* Adding a subtle glow effect based on feedback type */
+.visual-feedback.hint::before,
+.visual-feedback.success::before,
+.visual-feedback.illustration::before {
+  content: '';
+  position: absolute;
+  top: -10px;
+  left: -10px;
+  right: -10px;
+  bottom: -10px;
+  z-index: -1;
+  opacity: 0.15;
+  border-radius: 20px;
+  filter: blur(20px);
+}
+
+.visual-feedback.hint::before {
+  background: radial-gradient(circle, rgba(251, 191, 36, 0.8) 0%, rgba(251, 191, 36, 0) 70%);
+}
+
+.visual-feedback.success::before {
+  background: radial-gradient(circle, rgba(74, 222, 128, 0.8) 0%, rgba(74, 222, 128, 0) 70%);
+}
+
+.visual-feedback.illustration::before {
+  background: radial-gradient(circle, rgba(96, 165, 250, 0.8) 0%, rgba(96, 165, 250, 0) 70%);
+}

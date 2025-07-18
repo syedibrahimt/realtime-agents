@@ -17,3 +17,11 @@ In UI we have The notes area automatically updates to show progress through each
 2. Question Reader Agent
 3. Step by step Tutoring Agent
 4. Closer Agent
+
+The data structure is going to change. From hard1.json to hard2.json.
+i have added hint & success.
+Success should be shown when the student gives correct answer for that conceptual question.
+Hint should be shown when the student gives incorrect answer to the conceptual question.
+Both should be added as visual feedbacks in the main area. (not in notes area)
+Before the ai asks the question the illustration.content should be added as visual representation
+We have already written tool for updating notes, similarly achieve this functionality by using tool calling approach. Make the UI look good and align closely with the current UI. I have attached the current UI screenshot

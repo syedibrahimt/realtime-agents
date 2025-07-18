@@ -1,9 +1,10 @@
 import { useState, useEffect, useRef, useCallback } from "react"
 import { RealtimeSession } from "@openai/agents-realtime"
 import "./App.css"
+import "./visualFeedback.css"
 import { OPENAI_API_URL, OPENAI_API_KEY } from "../const"
 import { aiTutoring } from "./agents/tutor"
-import mathData from "../hard1.json"
+import mathData from "../hard2.json" // Updated to use hard2.json
 
 // Star background component with animation controlled by isConnected
 const StarBackground = ({ isConnected }) => {
@@ -260,6 +261,29 @@ const StarBackground = ({ isConnected }) => {
   )
 }
 
+// Visual Feedback Component
+const VisualFeedback = ({ feedback }) => {
+  if (!feedback) return null
+
+  const { type, content, label } = feedback
+  
+  // Check if content is just an emoji
+  const isEmojiOnly = /^[\p{Emoji}\s]+$/u.test(content);
+  
+  return (
+    <div className={`visual-feedback ${type}`}>
+      <div className="feedback-content">
+        {isEmojiOnly ? (
+          <span className="feedback-emoji">{content}</span>
+        ) : (
+          <div className="feedback-text">{content}</div>
+        )}
+      </div>
+      {label && <div className="feedback-label">{label}</div>}
+    </div>
+  )
+}
+
 // Notes Area Component
 const NotesArea = ({ isVisible = false, completedSteps = [] }) => {
   // Validate props
@@ -360,12 +384,13 @@ function App() {
   )
   const [notesVisible, setNotesVisible] = useState(false)
   const [completedSteps, setCompletedSteps] = useState([])
+  const [visualFeedback, setVisualFeedback] = useState(null)
 
   // Initialize session
   useEffect(() => {
     try {
       if (aiTutoring?.stepTutorAgent) {
-        session.current = new RealtimeSession(aiTutoring.greeterAgent)
+        session.current = new RealtimeSession(aiTutoring.stepTutorAgent)
       } else {
         throw new Error("Step tutor agent not available")
       }
@@ -416,14 +441,73 @@ function App() {
     []
   ) // Empty dependency array since we're using functional updates
 
+  // Handle visual feedback from the agent
+  const handleVisualFeedback = useCallback(
+    (type, content, label, stepNumber, questionIndex) => {
+      console.log(
+        `🎨 Visual feedback in UI:`,
+        type,
+        content,
+        label,
+        stepNumber,
+        questionIndex
+      )
+
+      // Validate input parameters
+      if (!type || !content || !label || !stepNumber) {
+        console.error("Invalid visual feedback data:", {
+          type,
+          content,
+          label,
+          stepNumber,
+          questionIndex,
+        })
+        return
+      }
+
+      // For any new feedback, clear previous feedback first
+      setVisualFeedback(null)
+
+      // Small delay to ensure smooth transition
+      setTimeout(() => {
+        // Set the current visual feedback
+        const timestamp = new Date().toISOString()
+        setVisualFeedback({
+          type,
+          content,
+          label,
+          stepNumber,
+          questionIndex,
+          timestamp,
+        })
+
+        // For success and hint types, automatically clear after 5 seconds
+        if (type === "success" || type === "hint") {
+          setTimeout(() => {
+            setVisualFeedback((current) => {
+              // Only clear if this is the same feedback that was set
+              if (current && current.timestamp === timestamp) {
+                return null
+              }
+              return current
+            })
+          }, 5000)
+        }
+      }, 100)
+    },
+    []
+  )
+
   // Expose handleStepCompletion globally for agent to call
   useEffect(() => {
     window.handleStepCompletion = handleStepCompletion
+    window.handleVisualFeedback = handleVisualFeedback
 
     return () => {
       delete window.handleStepCompletion
+      delete window.handleVisualFeedback
     }
-  }, [handleStepCompletion])
+  }, [handleStepCompletion, handleVisualFeedback])
 
   useEffect(() => {
     fetch(OPENAI_API_URL, {
@@ -456,6 +540,21 @@ function App() {
       if (!session.current) {
         throw new Error("Session not initialized")
       }
+
+      // For debugging visual feedback on initial connection
+      // Comment this out for production
+      /*
+      setTimeout(() => {
+        // Show illustration first
+        handleVisualFeedback(
+          'illustration',
+          '(3 + 1)',
+          'The innermost parentheses',
+          1,
+          0
+        );
+      }, 2000);
+      */
 
       await session.current.connect({
         apiKey: clientSecret,
@@ -555,30 +654,41 @@ function App() {
                   Notes
                 </button>
 
-                {/* Debug button for testing step completion */}
-                {/* <button
+                {/* Debug button for testing all feedback types */}
+                <button
                   className="debug-button"
                   onClick={() => {
-                    try {
-                      const stepIndex = completedSteps.length
-                      const step = mathData?.steps?.[stepIndex]
-                      if (step && step.notes) {
-                        handleStepCompletion(
-                          step.step,
-                          step.notes.description,
-                          step.notes.updated_expression
-                        )
-                      } else {
-                        console.warn("No more steps available to complete")
-                      }
-                    } catch (error) {
-                      console.error("Error in debug step completion:", error)
-                    }
+                    handleVisualFeedback(
+                      'illustration',
+                      '(3 + 1)',
+                      'The innermost parentheses',
+                      1,
+                      0
+                    )
+                    setTimeout(() => {
+                      handleVisualFeedback(
+                        'hint',
+                        '🤔',
+                        'What\'s inside the parentheses?',
+                        1,
+                        0
+                      )
+                    }, 2000)
+                    setTimeout(() => {
+                      handleVisualFeedback(
+                        'success',
+                        '✅',
+                        'Great job!',
+                        1,
+                        0
+                      )
+                    }, 4000)
                   }}
-                  title="Debug: Complete Next Step"
+                  title="Debug: Test All Feedback Types"
                 >
-                  🧪 Test Step
-                </button> */}
+                  🧪 Test Feedback
+                </button>
+                
                 {isConnected && (
                   <div className="timer">
                     <span className="timer-dot"></span>
@@ -586,9 +696,7 @@ function App() {
                   </div>
                 )}
               </div>
-            </div>
-
-            <div className="video-frame">
+            </div>            <div className="video-frame">
               <div className="ai-avatar">
                 {isConnected ? (
                   <div className="avatar-active">
@@ -608,6 +716,13 @@ function App() {
                 )}
                 <p className="avatar-name">Math Tutor</p>
               </div>
+              
+              {/* Visual feedback display area */}
+              {visualFeedback && (
+                <div className="visual-feedback-container">
+                  <VisualFeedback feedback={visualFeedback} />
+                </div>
+              )}
             </div>
 
             <div className="call-controls">

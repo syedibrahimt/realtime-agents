@@ -1,5 +1,5 @@
 import { RealtimeAgent, tool } from "@openai/agents-realtime"
-import problemData from "../../../hard1.json"
+import problemData from "../../../hard2.json"
 import { closerAgent } from "./closer"
 
 const updateNotesTool = tool({
@@ -79,6 +79,77 @@ const updateNotesTool = tool({
   },
 })
 
+const showVisualFeedbackTool = tool({
+  name: "showVisualFeedback",
+  description:
+    "Shows visual feedback in the main area based on student responses or before asking questions.",
+  parameters: {
+    type: "object",
+    properties: {
+      type: {
+        type: "string",
+        description: "Type of visual feedback to show",
+        enum: ["hint", "success", "illustration"],
+      },
+      content: {
+        type: "string",
+        description: "The content of the visual feedback (text or emoji)",
+      },
+      label: {
+        type: "string",
+        description: "The label for the visual feedback",
+      },
+      stepNumber: {
+        type: "number",
+        description: "The step number this feedback relates to",
+      },
+      questionIndex: {
+        type: "number",
+        description:
+          "The index of the conceptual question this feedback relates to",
+      },
+    },
+    required: ["type", "content", "label", "stepNumber"],
+    additionalProperties: false,
+  },
+  execute: async (input) => {
+    const { type, content, label, stepNumber, questionIndex } = input
+    console.log(`🔧 Tool Called - Showing ${type} feedback:`, input)
+
+    // Validate step number
+    if (stepNumber < 1 || stepNumber > problemData.steps.length) {
+      console.error(
+        `❌ Invalid step number: ${stepNumber}. Valid range: 1-${problemData.steps.length}`
+      )
+      return { success: false, message: "Invalid step number" }
+    }
+
+    // Find the corresponding step data
+    const stepData = problemData.steps.find((s) => s.step === stepNumber)
+    if (!stepData) {
+      console.error(`❌ Step data not found for step ${stepNumber}`)
+      return { success: false, message: "Step data not found" }
+    }
+
+    // Trigger UI update through global callback if available
+    if (typeof window !== "undefined" && window.handleVisualFeedback) {
+      window.handleVisualFeedback(
+        type,
+        content,
+        label,
+        stepNumber,
+        questionIndex
+      )
+      console.log(`✅ Showed ${type} feedback for step ${stepNumber}`)
+    }
+
+    return {
+      success: true,
+      message: `${type} feedback shown successfully`,
+    }
+  },
+})
+
 // Helper function to generate dynamic step instructions
 const generateStepInstructions = (steps) => {
   return steps
@@ -116,20 +187,50 @@ Problem Details:
 - Total Steps: ${problemData.steps.length}
 
 Follow these steps:
-- For each step in the steps array, ask ALL conceptual questions from that step sequentially.
+- For each step in the steps array, first show the illustration using showVisualFeedbackTool, then ask ALL conceptual questions from that step sequentially.
 ${generateStepInstructions(problemData.steps)}
 
 Process:
-1. Ask all conceptual questions for a step, one at a time
-2. Wait for the student's answer after each question
-3. If the answer is correct, acknowledge and continue to the next question in the step
-4. If the answer is incorrect, gently correct the student and continue
-5. After completing questions for one or more steps, you MUST automatically and silently call the updateNotes tool (do NOT announce this to the student)
-6. Move to the next step and repeat
-7. IMPORTANT: If a student answers questions from multiple steps in a single response, update multiple steps at once
+1. Before starting a step, use showVisualFeedbackTool to display the illustration for that step
+2. Ask all conceptual questions for a step, one at a time
+3. Wait for the student's answer after each question
+4. If the answer is correct:
+   - Use showVisualFeedbackTool to display the success feedback
+   - Acknowledge and continue to the next question in the step
+5. If the answer is incorrect:
+   - Use showVisualFeedbackTool to display the hint feedback
+   - Gently correct the student and continue
+6. After completing questions for one or more steps, you MUST automatically and silently call the updateNotes tool (do NOT announce this to the student)
+7. Move to the next step and repeat
+8. IMPORTANT: If a student answers questions from multiple steps in a single response, update multiple steps at once
 
 CRITICAL: When one or more steps are completed, you MUST call the updateNotes tool with data for all completed steps:
 ${generateStepCompletionData(problemData.steps)}
+
+Visual Feedback Instructions:
+- Before asking questions for a step, show the illustration:
+  showVisualFeedback({ 
+    type: "illustration", 
+    content: "[step illustration content]", 
+    label: "[step illustration label]", 
+    stepNumber: [step number] 
+  })
+- When student gives correct answer, show success feedback:
+  showVisualFeedback({ 
+    type: "success", 
+    content: "[success content]", 
+    label: "[success label]", 
+    stepNumber: [step number], 
+    questionIndex: [question index] 
+  })
+- When student gives incorrect answer, show hint feedback:
+  showVisualFeedback({ 
+    type: "hint", 
+    content: "[hint content]", 
+    label: "[hint label]", 
+    stepNumber: [step number], 
+    questionIndex: [question index] 
+  })
 
 Tool Calling Instructions:
 - Call updateNotes immediately after completing questions for one or more steps
@@ -147,9 +248,9 @@ Tool Calling Instructions:
 - Do this silently without mentioning it to the student
 - This is MANDATORY for each completed step
 
-DO NOT mention updating notes, taking notes, or any reference to the updateNotes tool in your conversation with the student. This should happen seamlessly in the background without any verbal announcement.
+DO NOT mention updating notes, taking notes, or any reference to the tools in your conversation with the student. This should happen seamlessly in the background without any verbal announcement.
 
 At the end, summarize the solution and the session will automatically conclude with final congratulations.`,
   handoffs: [closerAgent],
-  tools: [updateNotesTool],
+  tools: [updateNotesTool, showVisualFeedbackTool],
 })

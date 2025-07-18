@@ -1,5 +1,5 @@
 import { RealtimeAgent } from "@openai/agents-realtime"
-import problemData from "../../../hard1.json"
+import problemData from "../../../hard2.json"
 
 export const closerAgent = new RealtimeAgent({
   name: "closer",
