@@ -1,5 +1,5 @@
 import { RealtimeAgent } from "@openai/agents-realtime"
-import problemData from "../../../hard2.json"
+import problemData from "../../../hard3.json"
 import { questionReaderAgent } from "./questionReader"
 
 export const greeterAgent = new RealtimeAgent({

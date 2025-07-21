@@ -1,5 +1,5 @@
 import { RealtimeAgent, tool } from "@openai/agents-realtime"
-import problemData from "../../../hard2.json"
+import problemData from "../../../hard3.json"
 import { closerAgent } from "./closer"
 
 const updateNotesTool = tool({
@@ -54,8 +54,8 @@ const updateNotesTool = tool({
         continue
       }
 
-      // Find the corresponding step data
-      const stepData = problemData.steps.find((s) => s.step === stepNumber)
+      // Find the corresponding step data (0-indexed in the array)
+      const stepData = problemData.steps[stepNumber - 1]
       if (!stepData) {
         console.error(`❌ Step data not found for step ${stepNumber}`)
         continue
@@ -73,7 +73,7 @@ const updateNotesTool = tool({
     return {
       success: true,
       message: `Notes updated for ${steps.length} steps`,
-      stepTitle: lastStepData?.stepTitle,
+      stepTitle: lastStepData?.Topic,
       totalSteps: problemData.steps.length,
     }
   },
@@ -124,8 +124,8 @@ const showVisualFeedbackTool = tool({
       return { success: false, message: "Invalid step number" }
     }
 
-    // Find the corresponding step data
-    const stepData = problemData.steps.find((s) => s.step === stepNumber)
+    // Find the corresponding step data (0-indexed in the array)
+    const stepData = problemData.steps[stepNumber - 1]
     if (!stepData) {
       console.error(`❌ Step data not found for step ${stepNumber}`)
       return { success: false, message: "Step data not found" }
@@ -153,12 +153,12 @@ const showVisualFeedbackTool = tool({
 // Helper function to generate dynamic step instructions
 const generateStepInstructions = (steps) => {
   return steps
-    .map((step) => {
-      const questions = step.conceptual_questions
-        .map((q) => q.question)
+    .map((step, index) => {
+      const questions = step.ConceptualQuestions
+        .map((q) => q.Question)
         .join(" Then ask: ")
 
-      return `- For step ${step.step}: ${questions}`
+      return `- For step ${index + 1}: ${questions}`
     })
     .join("\n")
 }
@@ -166,8 +166,8 @@ const generateStepInstructions = (steps) => {
 // Helper function to generate dynamic step completion data
 const generateStepCompletionData = (steps) => {
   return steps
-    .map((step) => {
-      return `- Step ${step.step}: description="${step.notes.description}", expression="${step.notes.updated_expression}"`
+    .map((step, index) => {
+      return `- Step ${index + 1}: description="${step.Notes.Description}", expression="${step.Notes.UpdatedExpression}"`
     })
     .join("\n")
 }
@@ -187,18 +187,18 @@ Problem Details:
 - Total Steps: ${problemData.steps.length}
 
 Follow these steps:
-- For each step in the steps array, first show the illustration using showVisualFeedbackTool, then ask ALL conceptual questions from that step sequentially.
+- For each step in the steps array, first show the illustration's BeforeQuestion content using showVisualFeedbackTool, then ask ALL conceptual questions from that step sequentially.
 ${generateStepInstructions(problemData.steps)}
 
 Process:
-1. Before starting a step, use showVisualFeedbackTool to display the illustration for that step
+1. Before starting a step, use showVisualFeedbackTool to display the Illustration.BeforeQuestion for that step
 2. Ask all conceptual questions for a step, one at a time
 3. Wait for the student's answer after each question
 4. If the answer is correct:
-   - Use showVisualFeedbackTool to display the success feedback
+   - Use showVisualFeedbackTool to display the Illustration.Feedback.Success feedback
    - Acknowledge and continue to the next question in the step
 5. If the answer is incorrect:
-   - Use showVisualFeedbackTool to display the hint feedback
+   - Use showVisualFeedbackTool to display the Illustration.Feedback.Hint feedback
    - Gently correct the student and continue
 6. After completing questions for one or more steps, you MUST automatically and silently call the updateNotes tool (do NOT announce this to the student)
 7. Move to the next step and repeat
@@ -208,26 +208,26 @@ CRITICAL: When one or more steps are completed, you MUST call the updateNotes to
 ${generateStepCompletionData(problemData.steps)}
 
 Visual Feedback Instructions:
-- Before asking questions for a step, show the illustration:
+- Before asking questions for a step, show the BeforeQuestion illustration:
   showVisualFeedback({ 
     type: "illustration", 
-    content: "[step illustration content]", 
-    label: "[step illustration label]", 
+    content: "[step's Illustration.BeforeQuestion.Content]", 
+    label: "[step's Illustration.BeforeQuestion.Label]", 
     stepNumber: [step number] 
   })
 - When student gives correct answer, show success feedback:
   showVisualFeedback({ 
     type: "success", 
-    content: "[success content]", 
-    label: "[success label]", 
+    content: "[Illustration.Feedback.Success.Content]", 
+    label: "[Illustration.Feedback.Success.Label]", 
     stepNumber: [step number], 
     questionIndex: [question index] 
   })
 - When student gives incorrect answer, show hint feedback:
   showVisualFeedback({ 
     type: "hint", 
-    content: "[hint content]", 
-    label: "[hint label]", 
+    content: "[Illustration.Feedback.Hint.Content]", 
+    label: "[Illustration.Feedback.Hint.Label]", 
     stepNumber: [step number], 
     questionIndex: [question index] 
   })

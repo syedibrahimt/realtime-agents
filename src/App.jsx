@@ -2,9 +2,9 @@ import { useState, useEffect, useRef, useCallback } from "react"
 import { RealtimeSession } from "@openai/agents-realtime"
 import "./App.css"
 import "./visualFeedback.css"
-import { OPENAI_API_URL } from "../const"
+import { OPENAI_API_URL, OPENAI_API_KEY } from "../env"
 import { aiTutoring } from "./agents/tutor"
-import mathData from "../hard2.json" // Updated to use hard2.json
+import mathData from "../hard3.json" // Updated to use hard3.json
 
 // Star background component with animation controlled by isConnected
 const StarBackground = ({ isConnected }) => {
@@ -265,7 +265,7 @@ const StarBackground = ({ isConnected }) => {
 const VisualFeedback = ({ feedback }) => {
   if (!feedback) return null
 
-  const { type, content, label } = feedback
+  const { type, content } = feedback
   
   // Check if content is just an emoji
   const isEmojiOnly = /^[\p{Emoji}\s]+$/u.test(content);
@@ -279,7 +279,7 @@ const VisualFeedback = ({ feedback }) => {
           <div className="feedback-text">{content}</div>
         )}
       </div>
-      {label && <div className="feedback-label">{label}</div>}
+      {/* {label && <div className="feedback-label">{label}</div>} */}
     </div>
   )
 }
@@ -514,7 +514,7 @@ function App() {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        Authorization: `Bearer ${}`,
+        Authorization: `Bearer ${OPENAI_API_KEY}`,
       },
       body: JSON.stringify({
         model: "gpt-4o-realtime-preview-2025-06-03",
@@ -652,41 +652,6 @@ function App() {
                     <path d="M14,2H6A2,2 0 0,0 4,4V20A2,2 0 0,0 6,22H18A2,2 0 0,0 20,20V8L14,2M18,20H6V4H13V9H18V20Z" />
                   </svg>
                   Notes
-                </button>
-
-                {/* Debug button for testing all feedback types */}
-                <button
-                  className="debug-button"
-                  onClick={() => {
-                    handleVisualFeedback(
-                      'illustration',
-                      '(3 + 1)',
-                      'The innermost parentheses',
-                      1,
-                      0
-                    )
-                    setTimeout(() => {
-                      handleVisualFeedback(
-                        'hint',
-                        '🤔',
-                        'What\'s inside the parentheses?',
-                        1,
-                        0
-                      )
-                    }, 2000)
-                    setTimeout(() => {
-                      handleVisualFeedback(
-                        'success',
-                        '✅',
-                        'Great job!',
-                        1,
-                        0
-                      )
-                    }, 4000)
-                  }}
-                  title="Debug: Test All Feedback Types"
-                >
-                  🧪 Test Feedback
                 </button>
                 
                 {isConnected && (

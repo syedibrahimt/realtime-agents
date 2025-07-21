@@ -1,5 +1,5 @@
 import { RealtimeAgent } from "@openai/agents-realtime"
-import problemData from "../../../hard2.json"
+import problemData from "../../../hard3.json"
 
 export const closerAgent = new RealtimeAgent({
   name: "closer",
@@ -9,6 +9,6 @@ export const closerAgent = new RealtimeAgent({
   instructions: `You have to speak only in English. Congratulate the student for successfully completing all the steps of the problem. Inform them that the final answer to the problem "${
     problemData.problem
   }" is: ${
-    problemData.steps[problemData.steps.length - 1].notes.updated_expression
+    problemData.steps[problemData.steps.length - 1].Notes.UpdatedExpression
   }. Encourage them to keep practicing and let them know they did a great job!`,
 })
