@@ -154,9 +154,9 @@ const showVisualFeedbackTool = tool({
 const generateStepInstructions = (steps) => {
   return steps
     .map((step, index) => {
-      const questions = step.ConceptualQuestions
-        .map((q) => q.Question)
-        .join(" Then ask: ")
+      const questions = step.ConceptualQuestions.map((q) => q.Question).join(
+        " Then ask: "
+      )
 
       return `- For step ${index + 1}: ${questions}`
     })
@@ -167,7 +167,9 @@ const generateStepInstructions = (steps) => {
 const generateStepCompletionData = (steps) => {
   return steps
     .map((step, index) => {
-      return `- Step ${index + 1}: description="${step.Notes.Description}", expression="${step.Notes.UpdatedExpression}"`
+      return `- Step ${index + 1}: description="${
+        step.Notes.Description
+      }", expression="${step.Notes.UpdatedExpression}"`
     })
     .join("\n")
 }
@@ -198,8 +200,11 @@ Process:
    - Use showVisualFeedbackTool to display the Illustration.Feedback.Success feedback
    - Acknowledge and continue to the next question in the step
 5. If the answer is incorrect:
-   - Use showVisualFeedbackTool to display the Illustration.Feedback.Hint feedback
-   - Gently correct the student and continue
+   - Use showVisualFeedbackTool to display the Illustration.Feedback.Hint feedback visually
+   - Speak the Illustration.Feedback.Hint.Content to the student
+   - Wait for a second attempt from the student
+   - If the second attempt is also incorrect, provide the correct answer and move to the next question
+   - If the second attempt is correct, acknowledge and continue to the next question
 6. After completing questions for one or more steps, you MUST automatically and silently call the updateNotes tool (do NOT announce this to the student)
 7. Move to the next step and repeat
 8. IMPORTANT: If a student answers questions from multiple steps in a single response, update multiple steps at once
@@ -231,6 +236,7 @@ Visual Feedback Instructions:
     stepNumber: [step number], 
     questionIndex: [question index] 
   })
+  Then verbally say the hint content (Illustration.Feedback.Hint.Content) and wait for a second attempt
 
 Tool Calling Instructions:
 - Call updateNotes immediately after completing questions for one or more steps
@@ -249,6 +255,17 @@ Tool Calling Instructions:
 - This is MANDATORY for each completed step
 
 DO NOT mention updating notes, taking notes, or any reference to the tools in your conversation with the student. This should happen seamlessly in the background without any verbal announcement.
+
+Example Interaction for Incorrect Answer:
+1. You: "What's inside the innermost parentheses?"
+2. Student: "3 times 1" (incorrect answer)
+3. You: [Call showVisualFeedbackTool with type="hint", content="🤔", label="What's inside the parentheses?"]
+4. You: "That's not quite right. Let's look closer at the expression (3 + 1). The operation between 3 and 1 is addition, not multiplication."
+5. Student: "Oh, it's 3 plus 1" (correct on second try)
+6. You: "That's right!"
+OR
+5. Student: "It's 3 divided by 1" (still incorrect on second try)
+6. You: "Actually, the correct operation is addition. In (3 + 1), we have 3 plus 1, which equals 4. Let's continue."
 
 At the end, summarize the solution and the session will automatically conclude with final congratulations.`,
   handoffs: [closerAgent],

@@ -1,0 +1,319 @@
+{
+  "topic": "Maths",
+  "title": "Area and Perimeter of Rectangle",
+  "isConceptIntroductionEnabled": true,
+  "introData": {
+    "TopicExplanation": "Imagine you're helping your friend plan their bedroom. You wouldn't just buy things randomly - you'd need to measure! Some things need you to measure around the edges, others need you to measure the space inside.",
+    "Visual": {
+      "Content": "A bedroom floor plan showing carpet covering the inside area and baseboards going around the edges",
+      "Label": "A rectangular room showing the difference between covering space vs. going around edges.",
+      "Type": "text"
+    },
+    "Voice": "Welcome! We're going to discover two different types of measuring rectangles through brainstorming. Get ready to think about real-world situations!"
+  },
+  "questionData": {
+    "QuestionText": "A rectangular garden is 8 meters long and 5 meters wide. If you want to put a fence around it AND plant grass inside it, what measurements do you need?",
+    "Type": "Multiple Choice",
+    "QuestionImageURL": "",
+    "Options": [
+      {
+        "Option": "Perimeter = 26m, Area = 40 square meters",
+        "IsCorrect": true
+      },
+      {
+        "Option": "Perimeter = 40m, Area = 26 square meters",
+        "IsCorrect": false
+      },
+      {
+        "Option": "Both measurements are 40",
+        "IsCorrect": false
+      },
+      {
+        "Option": "Both measurements are 26",
+        "IsCorrect": false
+      }
+    ]
+  },
+  "steps": [
+    {
+      "Topic": "Discover the Need for Two Types of Measuring",
+      "Description": "Let's brainstorm real-world situations where we measure rectangles and discover why we might need different measurements.",
+      "ConceptualQuestions": [
+        {
+          "Goal": "Identify real-world rectangle measuring situations.",
+          "Illustration": {
+            "BeforeQuestion": {
+              "Content": "Think about your bedroom. What would you need to measure if you were decorating it?",
+              "Label": "Brainstorming prompt about measuring rectangles.",
+              "Type": "text"
+            },
+            "Feedback": {
+              "Hint": {
+                "Content": "Think about buying carpet vs. putting up border trim around the room.",
+                "Label": "Hint to guide thinking toward two types of measuring.",
+                "Type": "text"
+              },
+              "Success": {
+                "Content": "Great thinking! You're noticing there are different things to measure.",
+                "Label": "Positive reinforcement for generating ideas.",
+                "Type": "text"
+              }
+            }
+          },
+          "Question": "What comes to mind when you think about measuring a rectangular room for decorating?"
+        },
+        {
+          "Goal": "Distinguish between 'around' and 'inside' measurements.",
+          "Illustration": {
+            "BeforeQuestion": {
+              "Content": "What's the difference between walking around the edge of a rectangular garden vs. filling it with grass?",
+              "Label": "Prompt to distinguish edge vs. inside measurements.",
+              "Type": "text"
+            },
+            "Feedback": {
+              "Hint": {
+                "Content": "One involves the border/edge, the other involves covering the whole space inside.",
+                "Label": "Hint to clarify the distinction.",
+                "Type": "text"
+              },
+              "Success": {
+                "Content": "Excellent! You're discovering two completely different types of measuring.",
+                "Label": "Positive reinforcement for the key insight.",
+                "Type": "text"
+              }
+            }
+          },
+          "Question": "How is going around something different from covering/filling something?"
+        }
+      ],
+      "Notes": {
+        "Description": "Students discover there are two distinct types of measurements needed for rectangles.",
+        "UpdatedExpression": "Two types of measuring: AROUND the edges vs. INSIDE the space"
+      }
+    },
+    {
+      "Topic": "Explore 'Around the Edge' Situations",
+      "Description": "Let's brainstorm situations where we need to measure around the edges of rectangles.",
+      "ConceptualQuestions": [
+        {
+          "Goal": "Generate examples of perimeter situations.",
+          "Illustration": {
+            "BeforeQuestion": {
+              "Content": "What are some real-life situations where you need to measure around the edge of a rectangle?",
+              "Label": "Brainstorming prompt for perimeter examples.",
+              "Type": "text"
+            },
+            "Feedback": {
+              "Hint": {
+                "Content": "Think about fences, picture frames, baseboards, or anything that goes around the border.",
+                "Label": "Hint to generate perimeter examples.",
+                "Type": "text"
+              },
+              "Success": {
+                "Content": "Perfect examples! All of these involve measuring the distance around the edge.",
+                "Label": "Positive reinforcement for perimeter thinking.",
+                "Type": "text"
+              }
+            }
+          },
+          "Question": "When would you need to measure around the edge of a rectangle?"
+        },
+        {
+          "Goal": "Connect edge measurement to the garden problem.",
+          "Illustration": {
+            "BeforeQuestion": {
+              "Content": "Looking at our garden problem, which part involves measuring around the edge?",
+              "Label": "Connect brainstorming to the specific problem.",
+              "Type": "text"
+            },
+            "Feedback": {
+              "Hint": {
+                "Content": "Think about what a fence does - does it go around the garden or cover the inside?",
+                "Label": "Hint to connect fence to perimeter concept.",
+                "Type": "text"
+              },
+              "Success": {
+                "Content": "Exactly! The fence goes around the edge, so we need the 'around' measurement.",
+                "Label": "Positive reinforcement for making the connection.",
+                "Type": "text"
+              }
+            }
+          },
+          "Question": "In our garden problem, which part needs the 'around the edge' measurement?"
+        }
+      ],
+      "Notes": {
+        "Description": "Students identify that fence = measuring around the edge (perimeter).",
+        "UpdatedExpression": "Fence needs: Distance AROUND the rectangle = Perimeter"
+      }
+    },
+    {
+      "Topic": "Explore 'Inside Space' Situations",
+      "Description": "Now let's brainstorm situations where we need to measure the space inside rectangles.",
+      "ConceptualQuestions": [
+        {
+          "Goal": "Generate examples of area situations.",
+          "Illustration": {
+            "BeforeQuestion": {
+              "Content": "What are some real-life situations where you need to measure the space inside a rectangle?",
+              "Label": "Brainstorming prompt for area examples.",
+              "Type": "text"
+            },
+            "Feedback": {
+              "Hint": {
+                "Content": "Think about carpet, paint, grass, tiles - anything that covers or fills the whole space.",
+                "Label": "Hint to generate area examples.",
+                "Type": "text"
+              },
+              "Success": {
+                "Content": "Great examples! All of these involve covering or filling the entire space inside.",
+                "Label": "Positive reinforcement for area thinking.",
+                "Type": "text"
+              }
+            }
+          },
+          "Question": "When would you need to measure the space inside a rectangle?"
+        },
+        {
+          "Goal": "Connect inside measurement to the garden problem.",
+          "Illustration": {
+            "BeforeQuestion": {
+              "Content": "Looking at our garden problem, which part involves measuring the space inside?",
+              "Label": "Connect brainstorming to the specific problem.",
+              "Type": "text"
+            },
+            "Feedback": {
+              "Hint": {
+                "Content": "Think about what grass does - does it go around the edge or cover the whole garden?",
+                "Label": "Hint to connect grass to area concept.",
+                "Type": "text"
+              },
+              "Success": {
+                "Content": "Perfect! The grass covers the whole space inside, so we need the 'inside space' measurement.",
+                "Label": "Positive reinforcement for making the connection.",
+                "Type": "text"
+              }
+            }
+          },
+          "Question": "In our garden problem, which part needs the 'inside space' measurement?"
+        }
+      ],
+      "Notes": {
+        "Description": "Students identify that grass = measuring inside space (area).",
+        "UpdatedExpression": "Grass needs: Space INSIDE the rectangle = Area"
+      }
+    },
+    {
+      "Topic": "Discover the Math Names",
+      "Description": "Now that we understand the concepts, let's connect them to their mathematical names.",
+      "ConceptualQuestions": [
+        {
+          "Goal": "Connect concepts to mathematical terminology.",
+          "Illustration": {
+            "BeforeQuestion": {
+              "Content": "If I told you that 'perimeter' means distance around, and 'area' means space inside, which of your examples were perimeter and which were area?",
+              "Label": "Connect brainstormed concepts to mathematical terms.",
+              "Type": "text"
+            },
+            "Feedback": {
+              "Hint": {
+                "Content": "Remember: perimeter = around, area = inside. Sort your examples!",
+                "Label": "Hint to help categorize their examples.",
+                "Type": "text"
+              },
+              "Success": {
+                "Content": "Excellent! You've discovered what perimeter and area really mean through your own thinking.",
+                "Label": "Positive reinforcement for understanding the terms.",
+                "Type": "text"
+              }
+            }
+          },
+          "Question": "Now that you know perimeter = around and area = inside, how would you categorize your examples?"
+        },
+        {
+          "Goal": "Apply terms to the garden problem.",
+          "Illustration": {
+            "BeforeQuestion": {
+              "Content": "So for our garden problem, do we need to find the perimeter, the area, or both?",
+              "Label": "Apply the new terminology to the problem.",
+              "Type": "text"
+            },
+            "Feedback": {
+              "Hint": {
+                "Content": "We need fence (around) and grass (inside). What does that mean?",
+                "Label": "Hint to identify both measurements are needed.",
+                "Type": "text"
+              },
+              "Success": {
+                "Content": "Perfect! We need both perimeter (for the fence) AND area (for the grass).",
+                "Label": "Positive reinforcement for complete understanding.",
+                "Type": "text"
+              }
+            }
+          },
+          "Question": "For our garden problem, which measurements do we need - perimeter, area, or both?"
+        }
+      ],
+      "Notes": {
+        "Description": "Students connect their brainstormed concepts to mathematical terminology.",
+        "UpdatedExpression": "Garden needs: Perimeter (fence) AND Area (grass)"
+      }
+    },
+    {
+      "Topic": "Apply Understanding to Calculate",
+      "Description": "Now that we understand what we need to find, let's think about how to calculate these measurements.",
+      "ConceptualQuestions": [
+        {
+          "Goal": "Reason about perimeter calculation.",
+          "Illustration": {
+            "BeforeQuestion": {
+              "Content": "If the garden is 8m long and 5m wide, how would you figure out how much fence you need to go all the way around?",
+              "Label": "Guide thinking about perimeter calculation.",
+              "Type": "text"
+            },
+            "Feedback": {
+              "Hint": {
+                "Content": "Think about walking around the garden - you'd walk along all four sides. How long is each side?",
+                "Label": "Hint to think about adding all sides.",
+                "Type": "text"
+              },
+              "Success": {
+                "Content": "Great reasoning! You add up all the sides: 8 + 5 + 8 + 5 = 26 meters of fence.",
+                "Label": "Positive reinforcement for perimeter understanding.",
+                "Type": "text"
+              }
+            }
+          },
+          "Question": "How would you calculate how much fence you need for the garden?"
+        },
+        {
+          "Goal": "Reason about area calculation.",
+          "Illustration": {
+            "BeforeQuestion": {
+              "Content": "If the garden is 8m long and 5m wide, how would you figure out how much grass you need to cover the whole space?",
+              "Label": "Guide thinking about area calculation.",
+              "Type": "text"
+            },
+            "Feedback": {
+              "Hint": {
+                "Content": "Think about arranging square meters of grass - how many rows and columns would you need?",
+                "Label": "Hint to think about rows and columns (multiplication).",
+                "Type": "text"
+              },
+              "Success": {
+                "Content": "Excellent thinking! You multiply length × width: 8 × 5 = 40 square meters of grass.",
+                "Label": "Positive reinforcement for area understanding.",
+                "Type": "text"
+              }
+            }
+          },
+          "Question": "How would you calculate how much grass you need for the garden?"
+        }
+      ],
+      "Notes": {
+        "Description": "Students reason through the calculations: Perimeter = 26m, Area = 40 sq m.",
+        "UpdatedExpression": "Final Answer: Perimeter = 26m, Area = 40 square meters"
+      }
+    }
+  ]
+}

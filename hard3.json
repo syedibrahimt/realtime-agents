@@ -1,344 +1,375 @@
 {
-    "topic": "Maths",
-    "title": "Order of Operations",
-    "problem": "8 + (6 ÷ 2 × (3 + 1)) - 5",
-    "options": "Option A: 12, Option B: 18, Option C: 15, Option D: 16",
-    "steps": [
-        {
-            "Topic": "Parentheses First - Innermost",
-            "Description": "Let's start with the innermost parentheses. What's inside them?",
-            "ConceptualQuestions": [
-                {
-                    "Goal": "Identify what to do first according to order of operations.",
-                    "Illustration": {
-                        "BeforeQuestion": {
-                            "Content": "Look at the expression: 8 + (6 ÷ 2 × (3 + 1)) - 5. According to PEMDAS, what should we do first?",
-                            "Label": "Hint about order of operations priority.",
-                            "Type": "text"
-                        },
-                        "Feedback": {
-                            "Hint": {
-                                "Content": "PEMDAS tells us to do Parentheses first. Which parentheses should we start with?",
-                                "Label": "Further hint if needed.",
-                                "Type": "text"
-                            },
-                            "Success": {
-                                "Content": "Great job! We start with the innermost parentheses first.",
-                                "Label": "Positive reinforcement.",
-                                "Type": "text"
-                            }
-                        }
-                    },
-                    "Question": "What should we do first according to order of operations?"
-                },
-                {
-                    "Goal": "Calculate what's inside the innermost parentheses.",
-                    "Illustration": {
-                        "BeforeQuestion": {
-                            "Content": "Look at the innermost parentheses: (3 + 1). What operation is inside and what should it evaluate to?",
-                            "Label": "Hint to solve the innermost parentheses.",
-                            "Type": "text"
-                        },
-                        "Feedback": {
-                            "Hint": {
-                                "Content": "What is 3 plus 1?",
-                                "Label": "Further hint if needed.",
-                                "Type": "text"
-                            },
-                            "Success": {
-                                "Content": "Fantastic! (3 + 1) = 4.",
-                                "Label": "Positive reinforcement.",
-                                "Type": "text"
-                            }
-                        }
-                    },
-                    "Question": "What's inside the innermost parentheses and what should it evaluate to?"
-                }
-            ],
-            "Notes": {
-                "Description": "Solve the expression inside the innermost parentheses.",
-                "UpdatedExpression": "8 + (6 ÷ 2 × 4) - 5"
-            }
-        },
-        {
-            "Topic": "Parentheses - Division and Multiplication",
-            "Description": "Now we need to solve what's left inside the remaining parentheses. Remember, division and multiplication are done from left to right.",
-            "ConceptualQuestions": [
-                {
-                    "Goal": "Identify what to do next according to order of operations.",
-                    "Illustration": {
-                        "BeforeQuestion": {
-                            "Content": "Looking at 8 + (6 ÷ 2 × 4) - 5, what should we do next according to order of operations?",
-                            "Label": "Hint about continuing with parentheses.",
-                            "Type": "text"
-                        },
-                        "Feedback": {
-                            "Hint": {
-                                "Content": "We still have parentheses to solve. What's inside the remaining parentheses?",
-                                "Label": "Further hint if needed.",
-                                "Type": "text"
-                            },
-                            "Success": {
-                                "Content": "Correct! We continue with the remaining parentheses.",
-                                "Label": "Positive reinforcement.",
-                                "Type": "text"
-                            }
-                        }
-                    },
-                    "Question": "What should we do next according to order of operations?"
-                },
-                {
-                    "Goal": "Calculate the first operation inside the parentheses.",
-                    "Illustration": {
-                        "BeforeQuestion": {
-                            "Content": "Inside the parentheses we have: 6 ÷ 2 × 4. Since division and multiplication have equal priority, we work left to right. What should 6 ÷ 2 evaluate to?",
-                            "Label": "Hint to solve the division first.",
-                            "Type": "text"
-                        },
-                        "Feedback": {
-                            "Hint": {
-                                "Content": "How many times does 2 go into 6?",
-                                "Label": "Further hint if needed.",
-                                "Type": "text"
-                            },
-                            "Success": {
-                                "Content": "Perfect! 6 ÷ 2 = 3.",
-                                "Label": "Positive reinforcement.",
-                                "Type": "text"
-                            }
-                        }
-                    },
-                    "Question": "What's the first operation inside the parentheses and what should it evaluate to?"
-                }
-            ],
-            "Notes": {
-                "Description": "Perform the division operation first (left to right rule).",
-                "UpdatedExpression": "8 + (3 × 4) - 5"
-            }
-        },
-        {
-            "Topic": "Parentheses - Complete the Multiplication",
-            "Description": "Now finish the calculation inside the parentheses by doing the multiplication.",
-            "ConceptualQuestions": [
-                {
-                    "Goal": "Identify what to do next according to order of operations.",
-                    "Illustration": {
-                        "BeforeQuestion": {
-                            "Content": "Looking at 8 + (3 × 4) - 5, what should we do next according to order of operations?",
-                            "Label": "Hint about completing the parentheses.",
-                            "Type": "text"
-                        },
-                        "Feedback": {
-                            "Hint": {
-                                "Content": "We still need to finish what's inside the parentheses. What operation is left?",
-                                "Label": "Further hint if needed.",
-                                "Type": "text"
-                            },
-                            "Success": {
-                                "Content": "Right! We need to complete the multiplication inside the parentheses.",
-                                "Label": "Positive reinforcement.",
-                                "Type": "text"
-                            }
-                        }
-                    },
-                    "Question": "What should we do next according to order of operations?"
-                },
-                {
-                    "Goal": "Complete the multiplication inside the parentheses.",
-                    "Illustration": {
-                        "BeforeQuestion": {
-                            "Content": "Inside the parentheses we have: 3 × 4. What should this evaluate to?",
-                            "Label": "Hint to solve the multiplication.",
-                            "Type": "text"
-                        },
-                        "Feedback": {
-                            "Hint": {
-                                "Content": "What is 3 times 4?",
-                                "Label": "Further hint if needed.",
-                                "Type": "text"
-                            },
-                            "Success": {
-                                "Content": "Excellent! 3 × 4 = 12.",
-                                "Label": "Positive reinforcement.",
-                                "Type": "text"
-                            }
-                        }
-                    },
-                    "Question": "What's inside the parentheses now and what should it evaluate to?"
-                }
-            ],
-            "Notes": {
-                "Description": "Complete the multiplication to finish solving the parentheses.",
-                "UpdatedExpression": "8 + 12 - 5"
-            }
-        },
-        {
-            "Topic": "Addition and Subtraction - Left to Right",
-            "Description": "Now we have only addition and subtraction left. These operations have equal priority, so we work from left to right.",
-            "ConceptualQuestions": [
-                {
-                    "Goal": "Identify what to do next according to order of operations.",
-                    "Illustration": {
-                        "BeforeQuestion": {
-                            "Content": "Looking at 8 + 12 - 5, what should we do next according to order of operations?",
-                            "Label": "Hint about addition and subtraction priority.",
-                            "Type": "text"
-                        },
-                        "Feedback": {
-                            "Hint": {
-                                "Content": "We have addition and subtraction left. Since they have equal priority, which direction do we work?",
-                                "Label": "Further hint if needed.",
-                                "Type": "text"
-                            },
-                            "Success": {
-                                "Content": "Right! We work from left to right with addition and subtraction.",
-                                "Label": "Positive reinforcement.",
-                                "Type": "text"
-                            }
-                        }
-                    },
-                    "Question": "What should we do next according to order of operations?"
-                },
-                {
-                    "Goal": "Calculate the first operation from left to right.",
-                    "Illustration": {
-                        "BeforeQuestion": {
-                            "Content": "Working from left to right, the first operation is 8 + 12. What should this evaluate to?",
-                            "Label": "Hint to solve the addition first.",
-                            "Type": "text"
-                        },
-                        "Feedback": {
-                            "Hint": {
-                                "Content": "What is 8 plus 12?",
-                                "Label": "Further hint if needed.",
-                                "Type": "text"
-                            },
-                            "Success": {
-                                "Content": "Great work! 8 + 12 = 20.",
-                                "Label": "Positive reinforcement.",
-                                "Type": "text"
-                            }
-                        }
-                    },
-                    "Question": "What's the first operation from left to right and what should it evaluate to?"
-                }
-            ],
-            "Notes": {
-                "Description": "Perform the addition operation first (left to right rule).",
-                "UpdatedExpression": "20 - 5"
-            }
-        },
-        {
-            "Topic": "Final Subtraction",
-            "Description": "Complete the problem by doing the final subtraction.",
-            "ConceptualQuestions": [
-                {
-                    "Goal": "Identify what to do next according to order of operations.",
-                    "Illustration": {
-                        "BeforeQuestion": {
-                            "Content": "Looking at 20 - 5, what should we do next according to order of operations?",
-                            "Label": "Hint about the final operation.",
-                            "Type": "text"
-                        },
-                        "Feedback": {
-                            "Hint": {
-                                "Content": "We have one operation left. What is it?",
-                                "Label": "Further hint if needed.",
-                                "Type": "text"
-                            },
-                            "Success": {
-                                "Content": "Perfect! We complete the final subtraction.",
-                                "Label": "Positive reinforcement.",
-                                "Type": "text"
-                            }
-                        }
-                    },
-                    "Question": "What should we do next according to order of operations?"
-                },
-                {
-                    "Goal": "Calculate the final result.",
-                    "Illustration": {
-                        "BeforeQuestion": {
-                            "Content": "We need to calculate 20 - 5. What should this evaluate to?",
-                            "Label": "Hint to solve the final subtraction.",
-                            "Type": "text"
-                        },
-                        "Feedback": {
-                            "Hint": {
-                                "Content": "What is 20 minus 5?",
-                                "Label": "Further hint if needed.",
-                                "Type": "text"
-                            },
-                            "Success": {
-                                "Content": "Perfect! You've solved the entire problem correctly.",
-                                "Label": "Positive reinforcement.",
-                                "Type": "text"
-                            }
-                        }
-                    },
-                    "Question": "What's the final operation and what should it evaluate to?"
-                }
-            ],
-            "Notes": {
-                "Description": "Complete the final subtraction to get the answer.",
-                "UpdatedExpression": "15"
-            }
-        },
-        {
-            "Topic": "Answer Check",
-            "Description": "Let's verify our answer and match it to the given options.",
-            "ConceptualQuestions": [
-                {
-                    "Goal": "Identify what to do next according to order of operations.",
-                    "Illustration": {
-                        "BeforeQuestion": {
-                            "Content": "We have completed all calculations and got 15. What should we do next according to good problem-solving practice?",
-                            "Label": "Hint about checking the answer.",
-                            "Type": "text"
-                        },
-                        "Feedback": {
-                            "Hint": {
-                                "Content": "Should we check our answer against the given options?",
-                                "Label": "Further hint if needed.",
-                                "Type": "text"
-                            },
-                            "Success": {
-                                "Content": "Excellent! We should always check our answer against the given options.",
-                                "Label": "Positive reinforcement.",
-                                "Type": "text"
-                            }
-                        }
-                    },
-                    "Question": "What should we do next according to order of operations?"
-                },
-                {
-                    "Goal": "Match the answer to the correct option.",
-                    "Illustration": {
-                        "BeforeQuestion": {
-                            "Content": "Our answer is 15. Looking at the options: Option A: 12, Option B: 18, Option C: 15, Option D: 16. Which option matches our answer?",
-                            "Label": "Hint to match the answer with the options.",
-                            "Type": "text"
-                        },
-                        "Feedback": {
-                            "Hint": {
-                                "Content": "Which option shows the number 15?",
-                                "Label": "Further hint if needed.",
-                                "Type": "text"
-                            },
-                            "Success": {
-                                "Content": "Excellent! The answer is Option C: 15. You've successfully used the order of operations (PEMDAS) to solve this problem.",
-                                "Label": "Positive reinforcement.",
-                                "Type": "text"
-                            }
-                        }
-                    },
-                    "Question": "What's our calculated answer and which option does it match?"
-                }
-            ],
-            "Notes": {
-                "Description": "The final answer is 15, which corresponds to Option C.",
-                "UpdatedExpression": "Final Answer: 15 (Option C)"
-            }
-        }
+  "topic": "Maths",
+  "title": "Order of Operations",
+  "isConceptIntroductionEnabled": true,
+  "introData": {
+    "TopicExplanation": "Imagine you're building a LEGO tower. You wouldn't put the top piece on before the base, right?  The order matters! PEMDAS is our guide for building the solution to math problems with multiple operations.",
+    "Visual": {
+      "Content": "https://learnpodseditornodeserver.knomadixapp.com/f382f1cc5febff7acf1fe5ff965b0a42.jpg",
+      "Label": "A LEGO tower showing the order of operations.",
+      "Type": "text"
+    },
+    "Voice": "Welcome! We're going to learn about the order of operations, which is like a secret code for solving math problems. It helps us get the right answer every time!"
+  },
+  "questionData": {
+    "QuestionText": "8 + (6 ÷ 2 × (3 + 1)) - 5",
+    "Type": "Multiple Choice",
+    "QuestionImageURL": "",
+    "Options": [
+      {
+        "Option": 15,
+        "IsCorrect": true
+      },
+      {
+        "Option": 16,
+        "IsCorrect": false
+      },
+      {
+        "Option": 17,
+        "IsCorrect": false
+      },
+      {
+        "Option": 19,
+        "IsCorrect": false
+      }
     ]
+  },
+  "steps": [
+    {
+      "Topic": "Parentheses First - Innermost",
+      "Description": "Let's start with the innermost parentheses. What's inside them?",
+      "ConceptualQuestions": [
+        {
+          "Goal": "Identify what to do first according to order of operations.",
+          "Illustration": {
+            "BeforeQuestion": {
+              "Content": "Look at the expression: 8 + (6 ÷ 2 × (3 + 1)) - 5. According to PEMDAS, what should we do first?",
+              "Label": "Hint about order of operations priority.",
+              "Type": "text"
+            },
+            "Feedback": {
+              "Hint": {
+                "Content": "PEMDAS tells us to do Parentheses first. Which parentheses should we start with?",
+                "Label": "Further hint if needed.",
+                "Type": "text"
+              },
+              "Success": {
+                "Content": "Great job! We start with the innermost parentheses first.",
+                "Label": "Positive reinforcement.",
+                "Type": "text"
+              }
+            }
+          },
+          "Question": "What should we do first according to order of operations?"
+        },
+        {
+          "Goal": "Calculate what's inside the innermost parentheses.",
+          "Illustration": {
+            "BeforeQuestion": {
+              "Content": "Look at the innermost parentheses: (3 + 1). What operation is inside and what should it evaluate to?",
+              "Label": "Hint to solve the innermost parentheses.",
+              "Type": "text"
+            },
+            "Feedback": {
+              "Hint": {
+                "Content": "What is 3 plus 1?",
+                "Label": "Further hint if needed.",
+                "Type": "text"
+              },
+              "Success": {
+                "Content": "Fantastic! (3 + 1) = 4.",
+                "Label": "Positive reinforcement.",
+                "Type": "text"
+              }
+            }
+          },
+          "Question": "What's inside the innermost parentheses and what should it evaluate to?"
+        }
+      ],
+      "Notes": {
+        "Description": "Solve the expression inside the innermost parentheses.",
+        "UpdatedExpression": "8 + (6 ÷ 2 × 4) - 5"
+      }
+    },
+    {
+      "Topic": "Parentheses - Division and Multiplication",
+      "Description": "Now we need to solve what's left inside the remaining parentheses. Remember, division and multiplication are done from left to right.",
+      "ConceptualQuestions": [
+        {
+          "Goal": "Identify what to do next according to order of operations.",
+          "Illustration": {
+            "BeforeQuestion": {
+              "Content": "Looking at 8 + (6 ÷ 2 × 4) - 5, what should we do next according to order of operations?",
+              "Label": "Hint about continuing with parentheses.",
+              "Type": "text"
+            },
+            "Feedback": {
+              "Hint": {
+                "Content": "We still have parentheses to solve. What's inside the remaining parentheses?",
+                "Label": "Further hint if needed.",
+                "Type": "text"
+              },
+              "Success": {
+                "Content": "Correct! We continue with the remaining parentheses.",
+                "Label": "Positive reinforcement.",
+                "Type": "text"
+              }
+            }
+          },
+          "Question": "What should we do next according to order of operations?"
+        },
+        {
+          "Goal": "Calculate the first operation inside the parentheses.",
+          "Illustration": {
+            "BeforeQuestion": {
+              "Content": "Inside the parentheses we have: 6 ÷ 2 × 4. Since division and multiplication have equal priority, we work left to right. What should 6 ÷ 2 evaluate to?",
+              "Label": "Hint to solve the division first.",
+              "Type": "text"
+            },
+            "Feedback": {
+              "Hint": {
+                "Content": "How many times does 2 go into 6?",
+                "Label": "Further hint if needed.",
+                "Type": "text"
+              },
+              "Success": {
+                "Content": "Perfect! 6 ÷ 2 = 3.",
+                "Label": "Positive reinforcement.",
+                "Type": "text"
+              }
+            }
+          },
+          "Question": "What's the first operation inside the parentheses and what should it evaluate to?"
+        }
+      ],
+      "Notes": {
+        "Description": "Perform the division operation first (left to right rule).",
+        "UpdatedExpression": "8 + (3 × 4) - 5"
+      }
+    },
+    {
+      "Topic": "Parentheses - Complete the Multiplication",
+      "Description": "Now finish the calculation inside the parentheses by doing the multiplication.",
+      "ConceptualQuestions": [
+        {
+          "Goal": "Identify what to do next according to order of operations.",
+          "Illustration": {
+            "BeforeQuestion": {
+              "Content": "Looking at 8 + (3 × 4) - 5, what should we do next according to order of operations?",
+              "Label": "Hint about completing the parentheses.",
+              "Type": "text"
+            },
+            "Feedback": {
+              "Hint": {
+                "Content": "We still need to finish what's inside the parentheses. What operation is left?",
+                "Label": "Further hint if needed.",
+                "Type": "text"
+              },
+              "Success": {
+                "Content": "Right! We need to complete the multiplication inside the parentheses.",
+                "Label": "Positive reinforcement.",
+                "Type": "text"
+              }
+            }
+          },
+          "Question": "What should we do next according to order of operations?"
+        },
+        {
+          "Goal": "Complete the multiplication inside the parentheses.",
+          "Illustration": {
+            "BeforeQuestion": {
+              "Content": "Inside the parentheses we have: 3 × 4. What should this evaluate to?",
+              "Label": "Hint to solve the multiplication.",
+              "Type": "text"
+            },
+            "Feedback": {
+              "Hint": {
+                "Content": "What is 3 times 4?",
+                "Label": "Further hint if needed.",
+                "Type": "text"
+              },
+              "Success": {
+                "Content": "Excellent! 3 × 4 = 12.",
+                "Label": "Positive reinforcement.",
+                "Type": "text"
+              }
+            }
+          },
+          "Question": "What's inside the parentheses now and what should it evaluate to?"
+        }
+      ],
+      "Notes": {
+        "Description": "Complete the multiplication to finish solving the parentheses.",
+        "UpdatedExpression": "8 + 12 - 5"
+      }
+    },
+    {
+      "Topic": "Addition and Subtraction - Left to Right",
+      "Description": "Now we have only addition and subtraction left. These operations have equal priority, so we work from left to right.",
+      "ConceptualQuestions": [
+        {
+          "Goal": "Identify what to do next according to order of operations.",
+          "Illustration": {
+            "BeforeQuestion": {
+              "Content": "Looking at 8 + 12 - 5, what should we do next according to order of operations?",
+              "Label": "Hint about addition and subtraction priority.",
+              "Type": "text"
+            },
+            "Feedback": {
+              "Hint": {
+                "Content": "We have addition and subtraction left. Since they have equal priority, which direction do we work?",
+                "Label": "Further hint if needed.",
+                "Type": "text"
+              },
+              "Success": {
+                "Content": "Right! We work from left to right with addition and subtraction.",
+                "Label": "Positive reinforcement.",
+                "Type": "text"
+              }
+            }
+          },
+          "Question": "What should we do next according to order of operations?"
+        },
+        {
+          "Goal": "Calculate the first operation from left to right.",
+          "Illustration": {
+            "BeforeQuestion": {
+              "Content": "Working from left to right, the first operation is 8 + 12. What should this evaluate to?",
+              "Label": "Hint to solve the addition first.",
+              "Type": "text"
+            },
+            "Feedback": {
+              "Hint": {
+                "Content": "What is 8 plus 12?",
+                "Label": "Further hint if needed.",
+                "Type": "text"
+              },
+              "Success": {
+                "Content": "Great work! 8 + 12 = 20.",
+                "Label": "Positive reinforcement.",
+                "Type": "text"
+              }
+            }
+          },
+          "Question": "What's the first operation from left to right and what should it evaluate to?"
+        }
+      ],
+      "Notes": {
+        "Description": "Perform the addition operation first (left to right rule).",
+        "UpdatedExpression": "20 - 5"
+      }
+    },
+    {
+      "Topic": "Final Subtraction",
+      "Description": "Complete the problem by doing the final subtraction.",
+      "ConceptualQuestions": [
+        {
+          "Goal": "Identify what to do next according to order of operations.",
+          "Illustration": {
+            "BeforeQuestion": {
+              "Content": "Looking at 20 - 5, what should we do next according to order of operations?",
+              "Label": "Hint about the final operation.",
+              "Type": "text"
+            },
+            "Feedback": {
+              "Hint": {
+                "Content": "We have one operation left. What is it?",
+                "Label": "Further hint if needed.",
+                "Type": "text"
+              },
+              "Success": {
+                "Content": "Perfect! We complete the final subtraction.",
+                "Label": "Positive reinforcement.",
+                "Type": "text"
+              }
+            }
+          },
+          "Question": "What should we do next according to order of operations?"
+        },
+        {
+          "Goal": "Calculate the final result.",
+          "Illustration": {
+            "BeforeQuestion": {
+              "Content": "We need to calculate 20 - 5. What should this evaluate to?",
+              "Label": "Hint to solve the final subtraction.",
+              "Type": "text"
+            },
+            "Feedback": {
+              "Hint": {
+                "Content": "What is 20 minus 5?",
+                "Label": "Further hint if needed.",
+                "Type": "text"
+              },
+              "Success": {
+                "Content": "Perfect! You've solved the entire problem correctly.",
+                "Label": "Positive reinforcement.",
+                "Type": "text"
+              }
+            }
+          },
+          "Question": "What's the final operation and what should it evaluate to?"
+        }
+      ],
+      "Notes": {
+        "Description": "Complete the final subtraction to get the answer.",
+        "UpdatedExpression": "15"
+      }
+    },
+    {
+      "Topic": "Answer Check",
+      "Description": "Let's verify our answer and match it to the given options.",
+      "ConceptualQuestions": [
+        {
+          "Goal": "Identify what to do next according to order of operations.",
+          "Illustration": {
+            "BeforeQuestion": {
+              "Content": "We have completed all calculations and got 15. What should we do next according to good problem-solving practice?",
+              "Label": "Hint about checking the answer.",
+              "Type": "text"
+            },
+            "Feedback": {
+              "Hint": {
+                "Content": "Should we check our answer against the given options?",
+                "Label": "Further hint if needed.",
+                "Type": "text"
+              },
+              "Success": {
+                "Content": "Excellent! We should always check our answer against the given options.",
+                "Label": "Positive reinforcement.",
+                "Type": "text"
+              }
+            }
+          },
+          "Question": "What should we do next according to order of operations?"
+        },
+        {
+          "Goal": "Match the answer to the correct option.",
+          "Illustration": {
+            "BeforeQuestion": {
+              "Content": "Our answer is 15. Looking at the options: Option A: 12, Option B: 18, Option C: 15, Option D: 16. Which option matches our answer?",
+              "Label": "Hint to match the answer with the options.",
+              "Type": "text"
+            },
+            "Feedback": {
+              "Hint": {
+                "Content": "Which option shows the number 15?",
+                "Label": "Further hint if needed.",
+                "Type": "text"
+              },
+              "Success": {
+                "Content": "Excellent! The answer is Option C: 15. You've successfully used the order of operations (PEMDAS) to solve this problem.",
+                "Label": "Positive reinforcement.",
+                "Type": "text"
+              }
+            }
+          },
+          "Question": "What's our calculated answer and which option does it match?"
+        }
+      ],
+      "Notes": {
+        "Description": "The final answer is 15, which corresponds to Option C.",
+        "UpdatedExpression": "Final Answer: 15 (Option C)"
+      }
+    }
+  ]
 }

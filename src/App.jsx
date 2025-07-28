@@ -2,9 +2,9 @@ import { useState, useEffect, useRef, useCallback } from "react"
 import { RealtimeSession } from "@openai/agents-realtime"
 import "./App.css"
 import "./visualFeedback.css"
-import { OPENAI_API_URL, OPENAI_API_KEY } from "../env"
 import { aiTutoring } from "./agents/tutor"
 import mathData from "../hard3.json" // Updated to use hard3.json
+import { OPENAI_API_KEY, OPENAI_API_URL } from "./const"
 
 // Star background component with animation controlled by isConnected
 const StarBackground = ({ isConnected }) => {
@@ -265,11 +265,35 @@ const StarBackground = ({ isConnected }) => {
 const VisualFeedback = ({ feedback }) => {
   if (!feedback) return null
 
-  const { type, content } = feedback
-  
+  const { type, content, label, explanation, contentType } = feedback
+
   // Check if content is just an emoji
-  const isEmojiOnly = /^[\p{Emoji}\s]+$/u.test(content);
-  
+  const isEmojiOnly = /^[\p{Emoji}\s]+$/u.test(content)
+
+  // If this is an intro type
+  if (type === "intro") {
+    return (
+      <div className={`visual-feedback ${type}`}>
+        {contentType === "image" || content.startsWith("http") ? (
+          <div className="intro-image-container">
+            <img src={content} alt={label} className="intro-image" />
+          </div>
+        ) : (
+          <div className="feedback-content">
+            {isEmojiOnly ? (
+              <span className="feedback-emoji">{content}</span>
+            ) : (
+              <div className="feedback-text">{content}</div>
+            )}
+          </div>
+        )}
+        <div className="intro-explanation">{explanation}</div>
+        {label && <div className="feedback-label">{label}</div>}
+      </div>
+    )
+  }
+
+  // Regular feedback types
   return (
     <div className={`visual-feedback ${type}`}>
       <div className="feedback-content">
@@ -279,12 +303,10 @@ const VisualFeedback = ({ feedback }) => {
           <div className="feedback-text">{content}</div>
         )}
       </div>
-      {/* {label && <div className="feedback-label">{label}</div>} */}
+      {label && <div className="feedback-label">{label}</div>}
     </div>
   )
-}
-
-// Notes Area Component
+} // Notes Area Component
 const NotesArea = ({ isVisible = false, completedSteps = [] }) => {
   // Validate props
   if (!mathData || !mathData.steps || !Array.isArray(mathData.steps)) {
@@ -389,10 +411,11 @@ function App() {
   // Initialize session
   useEffect(() => {
     try {
-      if (aiTutoring?.stepTutorAgent) {
-        session.current = new RealtimeSession(aiTutoring.stepTutorAgent)
+      if (aiTutoring?.greeterAgent) {
+        // Start with the greeter agent, which will handle the proper flow
+        session.current = new RealtimeSession(aiTutoring.brainStormerAgent)
       } else {
-        throw new Error("Step tutor agent not available")
+        throw new Error("Greeter agent not available")
       }
     } catch (error) {
       console.error("Failed to initialize session:", error)
@@ -498,16 +521,51 @@ function App() {
     []
   )
 
-  // Expose handleStepCompletion globally for agent to call
+  // Handle introduction visual from the introGiver agent
+  const handleIntroVisual = useCallback((content, label, explanation, type) => {
+    console.log(`🎨 Intro visual in UI:`, content, label, explanation, type)
+
+    // Validate input parameters
+    if (!content || !label || !explanation) {
+      console.error("Invalid intro visual data:", {
+        content,
+        label,
+        explanation,
+        type,
+      })
+      return
+    }
+
+    // For any new feedback, clear previous feedback first
+    setVisualFeedback(null)
+
+    // Small delay to ensure smooth transition
+    setTimeout(() => {
+      // Set the current visual feedback with intro type
+      const timestamp = new Date().toISOString()
+      setVisualFeedback({
+        type: "intro",
+        content,
+        label,
+        explanation,
+        contentType: type || "text",
+        timestamp,
+      })
+    }, 100)
+  }, [])
+
+  // Expose handler functions globally for agents to call
   useEffect(() => {
     window.handleStepCompletion = handleStepCompletion
     window.handleVisualFeedback = handleVisualFeedback
+    window.handleIntroVisual = handleIntroVisual
 
     return () => {
       delete window.handleStepCompletion
       delete window.handleVisualFeedback
+      delete window.handleIntroVisual
     }
-  }, [handleStepCompletion, handleVisualFeedback])
+  }, [handleStepCompletion, handleVisualFeedback, handleIntroVisual])
 
   useEffect(() => {
     fetch(OPENAI_API_URL, {
@@ -653,7 +711,7 @@ function App() {
                   </svg>
                   Notes
                 </button>
-                
+
                 {isConnected && (
                   <div className="timer">
                     <span className="timer-dot"></span>
@@ -661,7 +719,8 @@ function App() {
                   </div>
                 )}
               </div>
-            </div>            <div className="video-frame">
+            </div>{" "}
+            <div className="video-frame">
               <div className="ai-avatar">
                 {isConnected ? (
                   <div className="avatar-active">
@@ -681,7 +740,7 @@ function App() {
                 )}
                 <p className="avatar-name">Math Tutor</p>
               </div>
-              
+
               {/* Visual feedback display area */}
               {visualFeedback && (
                 <div className="visual-feedback-container">
@@ -689,7 +748,6 @@ function App() {
                 </div>
               )}
             </div>
-
             <div className="call-controls">
               <button
                 className={`call-button connect-button ${

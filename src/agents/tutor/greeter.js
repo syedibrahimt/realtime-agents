@@ -1,6 +1,12 @@
 import { RealtimeAgent } from "@openai/agents-realtime"
 import problemData from "../../../hard3.json"
+import { introGiverAgent } from "./introGiver"
 import { questionReaderAgent } from "./questionReader"
+
+// Determine the next agent based on whether concept introduction is enabled
+const nextAgents = problemData.isConceptIntroductionEnabled
+  ? [introGiverAgent] // If enabled, go to intro agent first
+  : [questionReaderAgent] // If disabled, go directly to question reader
 
 export const greeterAgent = new RealtimeAgent({
   name: "greeter",
@@ -9,5 +15,5 @@ export const greeterAgent = new RealtimeAgent({
     "The initial agent that welcomes and greets the user to the tutoring session.",
   instructions: `You have to speak only in English. Welcome the student to the tutoring session. Tell them that they will be learning about ${problemData.topic}: ${problemData.title}. 
   Be encouraging and supportive in your tone. Once you've provided a warm welcome, the session will automatically proceed to the next phase.`,
-  handoffs: [questionReaderAgent],
+  handoffs: nextAgents,
 })
