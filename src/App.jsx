@@ -405,24 +405,19 @@ function App() {
     "Click 'Connect' to start a tutoring session"
   )
 
-   // Push-to-talk state management
-  const [isPushToTalkMode, setIsPushToTalkMode] = useState(false)
+   // Push-to-talk state management (always enabled)
   const [isMicrophoneMuted, setIsMicrophoneMuted] = useState(false)
   const [isPushToTalkActive, setIsPushToTalkActive] = useState(false)
-  const [pushToTalkKey, setPushToTalkKey] = useState('Space')
+  const [pushToTalkKey] = useState('Space')
   
-  // Update message based on push-to-talk mode
+  // Update message for push-to-talk mode
   useEffect(() => {
     if (isConnected) {
-      if (isPushToTalkMode) {
-        setMessage(`Connected! Hold ${pushToTalkKey === 'Space' ? 'Spacebar' : pushToTalkKey} to talk.`)
-      } else {
-        setMessage("Connected! AI tutor is ready.")
-      }
+      setMessage(`Connected! Hold ${pushToTalkKey === 'Space' ? 'Spacebar' : pushToTalkKey} to talk.`)
     } else {
       setMessage("Click 'Connect' to start a tutoring session")
     }
-  }, [isConnected, isPushToTalkMode, pushToTalkKey])
+  }, [isConnected, pushToTalkKey])
   const [notesVisible, setNotesVisible] = useState(false)
   const [completedSteps, setCompletedSteps] = useState([])
   const [visualFeedback, setVisualFeedback] = useState(null)
@@ -588,7 +583,7 @@ function App() {
 
   // Push-to-talk keyboard event handlers
   useEffect(() => {
-    if (!isPushToTalkMode || !isConnected) return
+    if (!isConnected) return
 
     const handleKeyDown = (event) => {
       // Only activate if the key matches our push-to-talk key and we're not already active
@@ -622,53 +617,20 @@ function App() {
       document.removeEventListener('keydown', handleKeyDown)
       document.removeEventListener('keyup', handleKeyUp)
     }
-  }, [isPushToTalkMode, isConnected, isPushToTalkActive, pushToTalkKey])
+  }, [isConnected, isPushToTalkActive, pushToTalkKey])
 
   // Initialize microphone state when connecting/disconnecting
   useEffect(() => {
-    if (isConnected && isPushToTalkMode) {
-      // Start muted in push-to-talk mode
+    if (isConnected) {
+      // Always start muted in push-to-talk mode
       if (session.current) {
         session.current.mute(true)
         setIsMicrophoneMuted(true)
       }
-    } else if (isConnected && !isPushToTalkMode) {
-      // Unmute in continuous mode
-      if (session.current) {
-        session.current.mute(false)
-        setIsMicrophoneMuted(false)
-      }
     }
-  }, [isConnected, isPushToTalkMode])
+  }, [isConnected])
 
-  // Manual microphone toggle
-  const toggleMicrophone = useCallback(() => {
-    if (!isConnected || !session.current) return
-    
-    const newMutedState = !isMicrophoneMuted
-    session.current.mute(newMutedState)
-    setIsMicrophoneMuted(newMutedState)
-  }, [isConnected, isMicrophoneMuted])
 
-  // Toggle between push-to-talk and continuous mode
-  const togglePushToTalkMode = useCallback(() => {
-    const newMode = !isPushToTalkMode
-    setIsPushToTalkMode(newMode)
-    
-    if (isConnected && session.current) {
-      if (newMode) {
-        // Switch to push-to-talk: start muted
-        session.current.mute(true)
-        setIsMicrophoneMuted(true)
-        setIsPushToTalkActive(false)
-      } else {
-        // Switch to continuous: unmute
-        session.current.mute(false)
-        setIsMicrophoneMuted(false)
-        setIsPushToTalkActive(false)
-      }
-    }
-  }, [isPushToTalkMode, isConnected])
 
   useEffect(() => {
     fetch(OPENAI_API_URL, {
@@ -793,7 +755,7 @@ function App() {
             className={`video-call-container ${
               isConnected ? "connected" : ""
             } ${
-              isPushToTalkMode && isPushToTalkActive ? "ptt-active" : ""
+              isPushToTalkActive ? "ptt-active" : ""
             } ${
               isMicrophoneMuted ? "ptt-muted" : ""
             }`}
@@ -893,70 +855,16 @@ function App() {
               {/* Push-to-Talk Controls */}
               {isConnected && (
                 <>
-                  <button
-                    className={`call-button ptt-mode-button ${
-                      isPushToTalkMode ? "active" : ""
-                    }`}
-                    onClick={togglePushToTalkMode}
-                    title={isPushToTalkMode ? "Switch to Continuous Mode" : "Switch to Push-to-Talk Mode"}
-                  >
-                    <svg
-                      xmlns="http://www.w3.org/2000/svg"
-                      viewBox="0 0 24 24"
-                      fill="currentColor"
-                    >
-                      <path d="M12 14c1.66 0 3-1.34 3-3V5c0-1.66-1.34-3-3-3S9 3.34 9 5v6c0 1.66 1.34 3 3 3zm-1-9c0-.55.45-1 1-1s1 .45 1 1v6c0 .55-.45 1-1 1s-1-.45-1-1V5zm6 6c0 2.76-2.24 5-5 5s-5-2.24-5-5H5c0 3.53 2.61 6.43 6 6.92V21h2v-3.08c3.39-.49 6-3.39 6-6.92h-2z" />
-                    </svg>
-                    {isPushToTalkMode ? "PTT" : "LIVE"}
-                  </button>
 
                   <button
                     className={`call-button mic-button ${
-                      isPushToTalkMode
-                        ? isPushToTalkActive
-                          ? "active"
-                          : "muted"
-                        : isMicrophoneMuted
-                        ? "muted"
-                        : "active"
+                      isPushToTalkActive ? "active" : "muted"
                     }`}
-                    onClick={isPushToTalkMode ? undefined : toggleMicrophone}
-                    disabled={isPushToTalkMode}
-                    title={
-                      isPushToTalkMode
-                        ? `Hold ${pushToTalkKey === 'Space' ? 'Spacebar' : pushToTalkKey} to talk`
-                        : isMicrophoneMuted
-                        ? "Unmute Microphone"
-                        : "Mute Microphone"
-                    }
+                    onClick={undefined}
+                    disabled={true}
+                    title={`Hold ${pushToTalkKey === 'Space' ? 'Spacebar' : pushToTalkKey} to talk`}
                   >
-                    {isPushToTalkMode ? (
-                      isPushToTalkActive ? (
-                        <svg
-                          xmlns="http://www.w3.org/2000/svg"
-                          viewBox="0 0 24 24"
-                          fill="currentColor"
-                        >
-                          <path d="M12 14c1.66 0 3-1.34 3-3V5c0-1.66-1.34-3-3-3S9 3.34 9 5v6c0 1.66 1.34 3 3 3zm-1-9c0-.55.45-1 1-1s1 .45 1 1v6c0 .55-.45 1-1 1s-1-.45-1-1V5zm6 6c0 2.76-2.24 5-5 5s-5-2.24-5-5H5c0 3.53 2.61 6.43 6 6.92V21h2v-3.08c3.39-.49 6-3.39 6-6.92h-2z" />
-                        </svg>
-                      ) : (
-                        <svg
-                          xmlns="http://www.w3.org/2000/svg"
-                          viewBox="0 0 24 24"
-                          fill="currentColor"
-                        >
-                          <path d="M19 11h-1.7c0 .74-.16 1.43-.43 2.05l1.23 1.23c.56-.98.9-2.09.9-3.28zm-4.02.17c0-.06.02-.11.02-.17V5c0-1.66-1.34-3-3-3S9 3.34 9 5v.18l5.98 5.99zM4.27 3L3 4.27l6.01 6.01V11c0 1.66 1.33 3 2.99 3 .22 0 .44-.03.65-.08l1.66 1.66c-.71.33-1.5.52-2.31.52-2.76 0-5.3-2.1-5.3-5.1H5c0 3.41 2.72 6.23 6 6.72V21h2v-3.28c.91-.13 1.77-.45 2.54-.9L19.73 21 21 19.73 4.27 3z" />
-                        </svg>
-                      )
-                    ) : isMicrophoneMuted ? (
-                      <svg
-                        xmlns="http://www.w3.org/2000/svg"
-                        viewBox="0 0 24 24"
-                        fill="currentColor"
-                      >
-                        <path d="M19 11h-1.7c0 .74-.16 1.43-.43 2.05l1.23 1.23c.56-.98.9-2.09.9-3.28zm-4.02.17c0-.06.02-.11.02-.17V5c0-1.66-1.34-3-3-3S9 3.34 9 5v.18l5.98 5.99zM4.27 3L3 4.27l6.01 6.01V11c0 1.66 1.33 3 2.99 3 .22 0 .44-.03.65-.08l1.66 1.66c-.71.33-1.5.52-2.31.52-2.76 0-5.3-2.1-5.3-5.1H5c0 3.41 2.72 6.23 6 6.72V21h2v-3.28c.91-.13 1.77-.45 2.54-.9L19.73 21 21 19.73 4.27 3z" />
-                      </svg>
-                    ) : (
+                    {isPushToTalkActive ? (
                       <svg
                         xmlns="http://www.w3.org/2000/svg"
                         viewBox="0 0 24 24"
@@ -964,14 +872,16 @@ function App() {
                       >
                         <path d="M12 14c1.66 0 3-1.34 3-3V5c0-1.66-1.34-3-3-3S9 3.34 9 5v6c0 1.66 1.34 3 3 3zm-1-9c0-.55.45-1 1-1s1 .45 1 1v6c0 .55-.45 1-1 1s-1-.45-1-1V5zm6 6c0 2.76-2.24 5-5 5s-5-2.24-5-5H5c0 3.53 2.61 6.43 6 6.92V21h2v-3.08c3.39-.49 6-3.39 6-6.92h-2z" />
                       </svg>
+                    ) : (
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        viewBox="0 0 24 24"
+                        fill="currentColor"
+                      >
+                        <path d="M19 11h-1.7c0 .74-.16 1.43-.43 2.05l1.23 1.23c.56-.98.9-2.09.9-3.28zm-4.02.17c0-.06.02-.11.02-.17V5c0-1.66-1.34-3-3-3S9 3.34 9 5v.18l5.98 5.99zM4.27 3L3 4.27l6.01 6.01V11c0 1.66 1.33 3 2.99 3 .22 0 .44-.03.65-.08l1.66 1.66c-.71.33-1.5.52-2.31.52-2.76 0-5.3-2.1-5.3-5.1H5c0 3.41 2.72 6.23 6 6.72V21h2v-3.28c.91-.13 1.77-.45 2.54-.9L19.73 21 21 19.73 4.27 3z" />
+                      </svg>
                     )}
-                    {isPushToTalkMode
-                      ? isPushToTalkActive
-                        ? "TALKING"
-                        : "HOLD SPACE"
-                      : isMicrophoneMuted
-                      ? "MUTED"
-                      : "LIVE"}
+                    {isPushToTalkActive ? "TALKING" : "HOLD SPACE"}
                   </button>
                 </>
               )}
