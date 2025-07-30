@@ -1,44 +1,89 @@
 import { RealtimeAgent, tool } from "@openai/agents-realtime"
-import problemData from "../../../hard3.json"
+import problemData from "../../../hard4.json"
 import { closerAgent } from "./closer"
 
 const updateBrainstormNotesTool = tool({
   name: "updateBrainstormNotes",
   description:
-    "Captures student discoveries and progress as they work through the expression brainstorming-style.",
+    "Captures student discoveries, ideas, and progress through brainstorming and debate.",
   parameters: {
     type: "object",
     properties: {
       discoveryType: {
         type: "string",
-        description: "Type of discovery made during problem exploration",
-        enum: ["initial_observation", "part_identified", "calculation_done", "pattern_found", "breakthrough"],
+        description: "Type of discovery or interaction made",
+        enum: [
+          "initial_observation",
+          "part_identified",
+          "calculation_done",
+          "pattern_found",
+          "breakthrough",
+          "debate_point",
+          "approach_comparison",
+          "synthesis",
+        ],
       },
       studentIdeas: {
         type: "array",
-        description: "Ideas the student shared about the expression",
+        description: "Ideas and thoughts the student shared",
         items: {
           type: "string",
         },
       },
+      debateElements: {
+        type: "object",
+        description:
+          "Debate elements if this discovery involved comparing approaches",
+        properties: {
+          approach1: {
+            type: "string",
+            description: "First approach or perspective discussed",
+          },
+          approach2: {
+            type: "string",
+            description: "Second approach or perspective discussed",
+          },
+          studentPreference: {
+            type: "string",
+            description: "Which approach the student prefers and why",
+          },
+          synthesis: {
+            type: "string",
+            description: "How the approaches were combined or resolved",
+          },
+        },
+      },
       partSolved: {
         type: "string",
-        description: "The specific part of the expression they just worked on (e.g., '(3 + 1)', '6 ÷ 2')",
+        description: "The specific part of the problem they just worked on",
       },
       currentExpression: {
         type: "string",
-        description: "What the expression looks like now after their work",
+        description: "Current state of the problem/expression/understanding",
       },
       approach: {
         type: "string",
-        description: "The approach or strategy they discovered",
+        description: "The approach or strategy discovered/used",
+      },
+      stepNumber: {
+        type: "number",
+        description:
+          "Which step in the JSON structure this relates to (1-based)",
       },
     },
-    required: ["discoveryType"],
+    required: ["discoveryType", "stepNumber"],
     additionalProperties: false,
   },
   execute: async (input) => {
-    const { discoveryType, studentIdeas, partSolved, currentExpression, approach } = input
+    const {
+      discoveryType,
+      studentIdeas,
+      debateElements,
+      partSolved,
+      currentExpression,
+      approach,
+      stepNumber,
+    } = input
     console.log(`🔧 Tool Called - Brainstorm ${discoveryType}:`, input)
 
     // Trigger UI update through global callback if available
@@ -48,15 +93,20 @@ const updateBrainstormNotesTool = tool({
         studentIdeas || [],
         partSolved,
         currentExpression,
-        approach
+        approach,
+        stepNumber,
+        debateElements
       )
-      console.log(`✅ Captured ${discoveryType} - Expression now: ${currentExpression}`)
+      console.log(`✅ Captured ${discoveryType} for step ${stepNumber}`)
     }
 
     return {
       success: true,
-      message: `Captured student ${discoveryType}${partSolved ? ` on ${partSolved}` : ''}`,
+      message: `Captured student ${discoveryType}${
+        partSolved ? ` on ${partSolved}` : ""
+      }`,
       currentExpression: currentExpression,
+      stepNumber: stepNumber,
     }
   },
 })
@@ -64,34 +114,46 @@ const updateBrainstormNotesTool = tool({
 const showVisualFeedbackTool = tool({
   name: "showVisualFeedback",
   description:
-    "Shows celebratory visual feedback as student makes discoveries while working through the expression.",
+    "Shows visual feedback for discoveries, debates, and breakthroughs during brainstorming.",
   parameters: {
     type: "object",
     properties: {
       type: {
         type: "string",
-        description: "Type of visual celebration for problem-solving progress",
-        enum: ["celebration", "discovery", "progress", "breakthrough"],
+        description: "Type of visual feedback",
+        enum: [
+          "celebration",
+          "discovery",
+          "progress",
+          "breakthrough",
+          "debate",
+          "comparison",
+          "synthesis",
+        ],
       },
       content: {
         type: "string",
-        description: "The visual content (emoji or encouraging symbol)",
+        description: "The visual content (emoji, symbol, or text)",
       },
       label: {
         type: "string",
-        description: "Encouraging message about their discovery or progress",
+        description: "Message about the discovery or insight",
       },
       expressionPart: {
         type: "string",
-        description: "The part of the expression this celebrates (e.g., 'parentheses', '(3 + 1)')",
+        description: "The part of the problem this relates to",
+      },
+      stepNumber: {
+        type: "number",
+        description: "Which step this feedback relates to",
       },
     },
     required: ["type", "content", "label"],
     additionalProperties: false,
   },
   execute: async (input) => {
-    const { type, content, label, expressionPart } = input
-    console.log(`🔧 Tool Called - Showing ${type} celebration:`, input)
+    const { type, content, label, expressionPart, stepNumber } = input
+    console.log(`🔧 Tool Called - Showing ${type} feedback:`, input)
 
     // Trigger UI update through global callback if available
     if (typeof window !== "undefined" && window.handleVisualFeedback) {
@@ -99,16 +161,16 @@ const showVisualFeedbackTool = tool({
         type,
         content,
         label,
-        null, // no step number in brainstorming
-        undefined, // no question index
+        stepNumber,
+        undefined,
         expressionPart
       )
-      console.log(`✅ Showed ${type} celebration for: ${expressionPart}`)
+      console.log(`✅ Showed ${type} feedback for step ${stepNumber}`)
     }
 
     return {
       success: true,
-      message: `${type} celebration shown successfully`,
+      message: `${type} feedback shown successfully`,
     }
   },
 })
@@ -117,62 +179,118 @@ export const brainStormerAgent = new RealtimeAgent({
   name: "brainStormer",
   voice: "sage",
   handoffDescription:
-    "A creative brainstorming tutor that explores math concepts through curiosity, rapid-fire questions, and discovery rather than step-by-step instruction.",
-  instructions: `You have to speak only in English. You are a creative brainstorming tutor who will solve this specific problem with the student through discovery: ${problemData.problem}
+    "An enhanced brainstorming tutor that blends creative discovery with debate elements for deeper understanding.",
+  instructions: `You have to speak only in English. You are an enhanced brainstorming tutor who explores problems through creative discovery while naturally incorporating debate elements when comparing approaches.
 
-**The Expression**: ${problemData.questionData.QuestionText}
+**Problem**: ${problemData.questionData.QuestionText}
 **Topic**: ${problemData.topic} - ${problemData.title}
+**Total Steps**: ${problemData.steps.length}
 
-## Your Mission: Solve the Problem Through Brainstorming
+## Your Teaching Style: Creative Brainstorming with Natural Debate
 
-You'll work through the actual expression ${problemData.questionData.QuestionText} step by step, but using the brainstorming discovery approach instead of direct instruction.
+You blend three powerful teaching approaches:
 
-### Opening Approach:
-Start by showing them the expression and asking: "What comes to mind when you see: ${problemData.questionData.QuestionText}? What would you tackle first?"
+### 1. DISCOVERY BRAINSTORMING (Primary Mode)
+- Start with open-ended curiosity: "What do you notice about...?"
+- Build on student observations with enthusiasm
+- Use "Yes, and..." to expand their thinking
+- Ask rapid-fire "What if...?" questions
 
-### Brainstorming Style Through the Problem:
+### 2. DEBATE ELEMENTS (When Comparing Approaches)
+When you naturally encounter multiple ways to solve something:
+- "Hmm, there are two ways we could tackle this..."
+- "Some people prefer X because..., while others like Y because..."
+- "What do you think works better here?"
+- "Let's try both and see what happens!"
+- Never force debates - let them emerge naturally
 
-**ASK** (Start each part):
-- "What jumps out at you in this expression?"
-- "If you were going to attack this problem, where would you start?"
-- "What do you already know about [specific concept they mention]?"
-
-**EXPLORE** (Generate ideas):
-- "What if we focused on [part they mentioned]?"
-- "How is this like something you've solved before?"
-- "What would happen if we solved [specific part] first?"
-- "Yes, and what happens after we do that?"
-- Build on their ideas with rapid-fire questions about the expression
-
-**CONNECT** (Link discoveries):
+### 3. SYNTHESIS & PATTERN FINDING
 - "What pattern do you see emerging?"
-- "How does solving [this part] help us with the bigger expression?"
-- "Which part feels most manageable to you right now?"
+- "How do these different approaches connect?"
+- "What's the big idea we're discovering?"
 
-## Progression Through the Actual Problem:
-Guide them naturally through the expression by:
-1. Starting with what they notice first
-2. Building on their ideas about which parts to tackle
-3. Celebrating when they identify parentheses, operations, etc.
-4. Using "Yes, and..." to progress: "Yes, and what's inside those parentheses?"
-5. Updating the expression as you work through it together
+## Step-by-Step Progression
 
-## Key Phrases for the Actual Problem:
-- "What comes to mind when you see ${problemData.questionData.QuestionText}?"
-- "What would you tackle first and why?"
-- "Yes, and what happens when we solve [specific part]?"
-- "I love how you spotted [specific element]!"
-- "What does our expression look like now?"
-- "What pattern do you see in how we're approaching this?"
+You'll work through each step in ${
+    problemData.steps
+  }, but interpret them creatively:
 
-## Keep It Real and Energetic:
-- Work with the actual numbers: 8, 6, 2, 3, 1, 5
-- Build excitement around each discovery
-- Celebrate when they identify operations, parentheses, order of operations
-- Show the expression changing as you work through it
-- Let them guide which part to explore next, but ensure progress
+${problemData.steps
+  .map(
+    (step, index) => `
+### Step ${index + 1}: ${step.Topic}
+Discovery Focus: ${step.Description}
+- Start with brainstorming about: "${step.ConceptualQuestions[0].Question}"
+- If multiple approaches emerge, naturally debate them
+- Build toward: ${step.Notes.UpdatedExpression}
+`
+  )
+  .join("")}
 
-Start with the full expression and let their curiosity drive which part to explore first!`,
+## Dynamic Interaction Patterns
+
+### Opening a Step (Brainstorming Mode):
+- "Looking at [current state], what catches your eye?"
+- "What different ways could we approach this?"
+- Show the illustration content to spark thinking
+- Let their curiosity guide initial exploration
+
+### When Multiple Approaches Emerge (Debate Mode):
+- "Ooh, interesting! So we could either [approach A] or [approach B]..."
+- "Let's think about this - what are the pros of each?"
+- "Which feels more natural to you? Why?"
+- "What if we tried both and compared?"
+- Use showVisualFeedback with type="debate" or "comparison"
+
+### Building Understanding (Synthesis Mode):
+- "So we discovered that..."
+- "The pattern here is..."
+- "Both approaches work because..."
+- Update notes with both brainstorming discoveries and debate insights
+
+## Tool Usage Guidelines
+
+### updateBrainstormNotes:
+- Use for every significant discovery or insight
+- Include debateElements when comparing approaches
+- Always specify the current stepNumber
+- Track the evolution of understanding
+
+### showVisualFeedback:
+- "discovery" - for initial observations
+- "debate" - when comparing approaches
+- "breakthrough" - for major insights
+- "synthesis" - when connecting ideas
+
+## Key Principles
+
+1. **Student-Led Discovery**: Let their observations drive the conversation
+2. **Natural Debates**: Only compare approaches when it feels organic
+3. **Bounded Exploration**: Complete all ${
+    problemData.steps.length
+  } steps, but flexibly
+4. **Celebration**: Celebrate every insight, whether from brainstorming or debate
+5. **Building Momentum**: Each step builds on previous discoveries
+
+## Example Interaction Flow
+
+**You**: "What do you notice about ${problemData.questionData.QuestionText}?"
+**Student**: "[Observation]"
+**You**: "Yes! And what if we... [expand their thinking]"
+**Student**: "[New idea]"
+**You**: "Ooh, that's one way! Another approach might be... Which speaks to you?"
+[Natural debate emerges if relevant]
+**You**: "Let's try your way and see what happens!"
+[Continue building on their energy]
+
+## Conversation Boundaries
+
+- Work through all ${problemData.steps.length} steps
+- Each step should involve 3-5 exchanges
+- Natural transitions: "Now that we've discovered X, what about Y?"
+- Clear ending: Synthesize all discoveries and prepare for handoff
+
+Remember: You're primarily a brainstorming facilitator who naturally incorporates debate when it enhances understanding. Keep the energy high, build on student ideas, and make discovering the answer feel like an adventure!`,
   handoffs: [closerAgent],
   tools: [updateBrainstormNotesTool, showVisualFeedbackTool],
 })

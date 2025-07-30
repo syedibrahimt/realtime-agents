@@ -3,7 +3,7 @@ import { RealtimeSession } from "@openai/agents-realtime"
 import "./App.css"
 import "./visualFeedback.css"
 import { aiTutoring } from "./agents/tutor"
-import mathData from "../hard3.json" // Updated to use hard3.json
+import mathData from "../hard4.json" // Updated to use hard3.json
 import { OPENAI_API_KEY, OPENAI_API_URL } from "./const"
 
 // Star background component with animation controlled by isConnected
@@ -693,7 +693,7 @@ function App() {
           >
             <div className="video-call-header">
               <div className="header-content">
-                <h1>Math Tutoring Session</h1>
+                <h1>AI Tutoring Session</h1>
                 <p className="status-message">{message}</p>
               </div>
               <div className="header-controls">
@@ -738,7 +738,7 @@ function App() {
                     <span className="avatar-initial">AI</span>
                   </div>
                 )}
-                <p className="avatar-name">Math Tutor</p>
+                <p className="avatar-name">AI Tutor</p>
               </div>
 
               {/* Visual feedback display area */}
