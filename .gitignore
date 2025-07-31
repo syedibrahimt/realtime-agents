@@ -26,4 +26,5 @@ dist-ssr
 .claude
 
 env.js
+const.js
 # Sensitive information
