@@ -1,71 +1,90 @@
-import { RealtimeAgent, tool } from "@openai/agents-realtime"
+import { GeminiAgent } from "../../gemini/GeminiAgent"
 import problemData from "../../../hard3.json"
-import { questionReaderAgent } from "./questionReader"
 
-const showIntroVisualTool = tool({
-  name: "showIntroVisual",
-  description:
-    "Shows introduction visual content and explanation in the main area.",
-  parameters: {
-    type: "object",
-    properties: {
-      content: {
-        type: "string",
-        description: "The content of the visual (could be text, URL, or emoji)",
-      },
-      label: {
-        type: "string",
-        description: "The label/description for the visual",
-      },
-      explanation: {
-        type: "string",
-        description: "The explanation text to be shown with the visual",
-      },
-      type: {
-        type: "string",
-        description: "The type of visual content (text, image, etc.)",
-      },
-    },
-    required: ["content", "label", "explanation"],
-    additionalProperties: false,
-  },
-  execute: async (input) => {
-    const { content, label, explanation, type } = input
-    console.log(`🔧 Tool Called - Showing introduction visual:`, input)
+// Note: handoffs will be set after all agents are created to avoid circular dependencies
+let nextAgents = []
+
+class IntroGiverAgent extends GeminiAgent {
+  constructor(config) {
+    super(config)
+  }
+
+  /**
+   * Process incoming messages and handle tool calls
+   */
+  processMessage(data) {
+    super.processMessage(data)
+    
+    // Check if we need to show visual content
+    if (this.isActive && data.serverContent?.modelTurn) {
+      const parts = data.serverContent.modelTurn.parts
+      
+      parts.forEach(part => {
+        if (part.text && part.text.includes('showIntroVisual')) {
+          // Extract visual content from the response and trigger UI
+          this.showIntroVisual()
+        }
+      })
+    }
+  }
+
+  /**
+   * Show introduction visual to the student
+   */
+  showIntroVisual() {
+    console.log(`🔧 IntroGiver Agent - Showing introduction visual`)
+
+    // Use the problem data to show the visual
+    const { Visual, TopicExplanation } = problemData.introData
 
     // Trigger UI update through global callback if available
     if (typeof window !== "undefined" && window.handleIntroVisual) {
-      window.handleIntroVisual(content, label, explanation, type)
+      window.handleIntroVisual(
+        Visual.Content,
+        Visual.Label,
+        TopicExplanation,
+        Visual.Type
+      )
       console.log(`✅ Showed introduction visual`)
     }
+  }
 
-    return {
-      success: true,
-      message: `Introduction visual shown successfully`,
-    }
-  },
-})
+  /**
+   * Override activation to include tool setup
+   */
+  async activate(session) {
+    await super.activate(session)
+    
+    // Send specific instructions including the tool usage
+    const extendedInstructions = `${this.instructions}
 
-export const introGiverAgent = new RealtimeAgent({
+After you speak the introduction, you should call showIntroVisual to display the visual content. Simply mention "showIntroVisual" in your response and the system will automatically display the visual aid.`
+
+    await this.sendPrompt(extendedInstructions)
+  }
+}
+
+const introGiverAgent = new IntroGiverAgent({
   name: "introGiver",
-  voice: "sage",
+  voice: "Kore",
   handoffDescription:
     "The agent that introduces the concept with a visual aid and explanation.",
   instructions: `You have to speak only in English. Your job is to introduce the mathematical concept to the student.
 
 First, speak the introduction text: "${problemData.introData.Voice}"
 
-Then, use the showIntroVisual tool to display the visual aid and explanation to the student:
-showIntroVisual({
-  content: "${problemData.introData.Visual.Content}",
-  label: "${problemData.introData.Visual.Label}",
-  explanation: "${problemData.introData.TopicExplanation}",
-  type: "${problemData.introData.Visual.Type}"
-})
+Then, mention that you will show a visual aid to help explain the concept. Say "showIntroVisual" to trigger the visual display.
 
 After introducing the concept, pause briefly to allow the student to absorb the information, then inform them that you'll be moving on to the problem itself. The session will automatically continue to the next phase where the problem will be presented.
 
 Note: Always maintain an encouraging and supportive tone. Make the student feel comfortable with learning the new concept.`,
-  handoffs: [questionReaderAgent],
-  tools: [showIntroVisualTool],
+  systemInstructions: `You are the introGiver agent for an AI tutoring system. Your role is to introduce mathematical concepts with visual aids and clear explanations. You should use encouraging language and ensure students understand the concept before moving forward.`,
+  handoffs: nextAgents,
 })
+
+// Function to set handoffs after all agents are created
+const setIntroGiverHandoffs = (handoffs) => {
+  introGiverAgent.handoffs = handoffs
+}
+
+export { introGiverAgent, setIntroGiverHandoffs }

@@ -1,10 +1,11 @@
 import { useState, useEffect, useRef, useCallback } from "react"
-import { RealtimeSession } from "@openai/agents-realtime"
+import { GeminiLiveSession } from "./gemini/LiveSession"
+import { GeminiAgentManager } from "./gemini/GeminiAgent"
 import "./App.css"
 import "./visualFeedback.css"
 import { aiTutoring } from "./agents/tutor"
 import mathData from "../hard4.json" // Updated to use hard3.json
-import { OPENAI_API_KEY, OPENAI_API_URL } from "../env"
+import { GEMINI_API_KEY } from "../env"
 
 // Star background component with animation controlled by isConnected
 const StarBackground = ({ isConnected }) => {
@@ -397,8 +398,8 @@ const NotesArea = ({ isVisible = false, completedSteps = [] }) => {
 function App() {
   // Initialize session with error handling
   const session = useRef(null)
+  const agentManager = useRef(null)
   const [sessionError, setSessionError] = useState(null)
-  const [clientSecret, setClientSecret] = useState()
   const [isConnected, setIsConnected] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
   const [message, setMessage] = useState(
@@ -426,10 +427,36 @@ function App() {
   useEffect(() => {
     try {
       if (aiTutoring?.greeterAgent) {
-        // Start with the greeter agent, which will handle the proper flow
-        session.current = new RealtimeSession(aiTutoring.brainStormerAgent)
+        // Create Gemini Live API session
+        session.current = new GeminiLiveSession()
+        
+        // Create agent manager
+        agentManager.current = new GeminiAgentManager(session.current)
+        
+        // Register all agents
+        Object.values(aiTutoring).forEach(agent => {
+          agentManager.current.registerAgent(agent)
+        })
+
+        // Set up session event listeners
+        session.current.addEventListener('connected', () => {
+          setIsConnected(true)
+          setMessage(`Connected! Hold Spacebar to talk.`)
+        })
+
+        session.current.addEventListener('disconnected', () => {
+          setIsConnected(false)
+          setMessage("Click 'Connect' to start a tutoring session")
+        })
+
+        session.current.addEventListener('error', (error) => {
+          console.error('Session error:', error)
+          setSessionError(error.message || 'Connection error')
+          setMessage("Connection error occurred")
+        })
+
       } else {
-        throw new Error("Greeter agent not available")
+        throw new Error("Agents not available")
       }
     } catch (error) {
       console.error("Failed to initialize session:", error)
@@ -632,58 +659,33 @@ function App() {
 
 
 
+  // Gemini doesn't need client secret fetching, just verify API key
   useEffect(() => {
-    fetch(OPENAI_API_URL, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${OPENAI_API_KEY}`,
-      },
-      body: JSON.stringify({
-        model: "gpt-4o-realtime-preview-2025-06-03",
-      }),
-    })
-      .then((res) => res.json())
-      .then((data) => {
-        setClientSecret(data.client_secret.value)
-      })
-      .catch((err) => {
-        console.error(err)
-        setMessage("Failed to initialize session. Please try again.")
-      })
+    if (!GEMINI_API_KEY) {
+      setSessionError("Gemini API key not configured")
+      setMessage("Please configure your Gemini API key")
+    }
   }, [])
 
   const handleConnect = async () => {
-    if (!clientSecret || isConnected) return
+    if (!GEMINI_API_KEY || isConnected) return
 
     try {
       setIsLoading(true)
       setMessage("Connecting to AI tutor...")
 
-      if (!session.current) {
+      if (!session.current || !agentManager.current) {
         throw new Error("Session not initialized")
       }
 
-      // For debugging visual feedback on initial connection
-      // Comment this out for production
-      /*
-      setTimeout(() => {
-        // Show illustration first
-        handleVisualFeedback(
-          'illustration',
-          '(3 + 1)',
-          'The innermost parentheses',
-          1,
-          0
-        );
-      }, 2000);
-      */
-
+      // Connect to Gemini Live API
       await session.current.connect({
-        apiKey: clientSecret,
+        apiKey: GEMINI_API_KEY,
       })
 
-      setIsConnected(true)
+      // Start with the greeter agent (or brainStormer for testing)
+      await agentManager.current.startWithAgent('greeter')
+
     } catch (err) {
       console.error("Connection error:", err)
       setMessage(`Failed to connect: ${err.message || "Unknown error"}`)
@@ -823,7 +825,7 @@ function App() {
                   isConnected ? "disabled" : ""
                 }`}
                 onClick={handleConnect}
-                disabled={isLoading || isConnected || !clientSecret}
+                disabled={isLoading || isConnected || !GEMINI_API_KEY}
               >
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
@@ -847,7 +849,7 @@ function App() {
                   viewBox="0 0 24 24"
                   fill="currentColor"
                 >
-                  <path d="M12 9c-1.6 0-3.15.25-4.6.72v3.1c0 .39-.23.74-.56.9-.98.49-1.87 1.12-2.66 1.85-.18.18-.43.28-.7.28-.28 0-.53-.11-.71-.29L.29 13.08c-.18-.17-.29-.42-.29-.7 0-.28.11-.53.29-.71C3.34 8.78 7.46 7 12 7s8.66 1.78 11.71 4.67c.18.18.29.43.29.71 0 .28-.11.53-.29.71l-2.48 2.48c-.18.18-.43.29-.71.29-.27 0-.52-.1-.7-.28-.79-.73-1.68-1.36-2.66-1.85-.33-.16-.56-.5-.56-.9v-3.1C15.15 9.25 13.6 9 12 9z" />
+                  <path d="M12 9c-1.6 0-3.15.25-4.6.72v3.1c0 .39-.23.74-.56.9-.98.49-1.87 1.12-2.66 1.85-.18.18-.43.28-.7.28-.28 0-.53-.11-.71-.29L.29 13.08c-.18-.17-.29-.42-.29-.7 0-.28.11-.53.29-.71C3.34 8.78 7.46 7 12 7s8.66 1.78 11.71 4.67c.18.18.29.43.29.71 0 .28-.11-.53-.29.71l-2.48 2.48c-.18.18-.43.29-.71.29-.27 0-.52-.1-.7-.28-.79-.73-1.68-1.36-2.66-1.85-.33-.16-.56-.5-.56-.9v-3.1C15.15 9.25 13.6 9 12 9z" />
                 </svg>
                 Disconnect
               </button>

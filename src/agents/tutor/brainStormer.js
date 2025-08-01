@@ -1,159 +1,93 @@
-import { RealtimeAgent, tool } from "@openai/agents-realtime"
+import { GeminiAgent } from "../../gemini/GeminiAgent"
 import problemData from "../../../hard4.json"
-import { closerAgent } from "./closer"
 
-const updateBrainstormNotesTool = tool({
-  name: "updateBrainstormNotes",
-  description:
-    "Captures student discoveries, ideas, and progress through brainstorming and debate.",
-  parameters: {
-    type: "object",
-    properties: {
-      discoveryType: {
-        type: "string",
-        description: "Type of discovery or interaction made",
-        enum: [
-          "initial_observation",
-          "part_identified",
-          "calculation_done",
-          "pattern_found",
-          "breakthrough",
-          "debate_point",
-          "approach_comparison",
-          "synthesis",
-        ],
-      },
-      studentIdeas: {
-        type: "array",
-        description: "Ideas and thoughts the student shared",
-        items: {
-          type: "string",
-        },
-      },
-      debateElements: {
-        type: "object",
-        description:
-          "Debate elements if this discovery involved comparing approaches",
-        properties: {
-          approach1: {
-            type: "string",
-            description: "First approach or perspective discussed",
-          },
-          approach2: {
-            type: "string",
-            description: "Second approach or perspective discussed",
-          },
-          studentPreference: {
-            type: "string",
-            description: "Which approach the student prefers and why",
-          },
-          synthesis: {
-            type: "string",
-            description: "How the approaches were combined or resolved",
-          },
-        },
-      },
-      partSolved: {
-        type: "string",
-        description: "The specific part of the problem they just worked on",
-      },
-      currentExpression: {
-        type: "string",
-        description: "Current state of the problem/expression/understanding",
-      },
-      approach: {
-        type: "string",
-        description: "The approach or strategy discovered/used",
-      },
-      stepNumber: {
-        type: "number",
-        description:
-          "Which step in the JSON structure this relates to (1-based)",
-      },
-    },
-    required: ["discoveryType", "stepNumber"],
-    additionalProperties: false,
-  },
-  execute: async (input) => {
-    const {
-      discoveryType,
-      studentIdeas,
-      debateElements,
-      partSolved,
-      currentExpression,
-      approach,
-      stepNumber,
-    } = input
-    console.log(`🔧 Tool Called - Brainstorm ${discoveryType}:`, input)
+// Note: handoffs will be set after all agents are created to avoid circular dependencies
+let nextAgents = []
 
-    // Trigger UI update through global callback if available
+class BrainStormerAgent extends GeminiAgent {
+  constructor(config) {
+    super(config)
+    this.currentStep = 1
+  }
+
+  /**
+   * Process incoming messages and handle tool calls
+   */
+  processMessage(data) {
+    super.processMessage(data)
+    
+    // Check if we need to handle tools
+    if (this.isActive && data.serverContent?.modelTurn) {
+      const parts = data.serverContent.modelTurn.parts
+      
+      parts.forEach(part => {
+        if (part.text) {
+          if (part.text.includes('updateBrainstormNotes')) {
+            this.handleUpdateBrainstormNotes(part.text)
+          }
+          if (part.text.includes('showVisualFeedback')) {
+            this.handleShowVisualFeedback(part.text)
+          }
+        }
+      })
+    }
+  }
+
+  /**
+   * Handle brainstorm notes update functionality
+   */
+  handleUpdateBrainstormNotes(text) {
+    console.log(`🔧 BrainStormer Agent - Updating brainstorm notes`)
+
+    // For now, we'll use basic discovery tracking
+    const discoveryType = this.extractDiscoveryType(text)
+    const stepNumber = this.currentStep
+
+    // Trigger UI update through global callback if available  
     if (typeof window !== "undefined" && window.handleBrainstormUpdate) {
       window.handleBrainstormUpdate(
         discoveryType,
-        studentIdeas || [],
-        partSolved,
-        currentExpression,
-        approach,
+        [],
+        "current problem part",
+        "current understanding",
+        "brainstorming approach",
         stepNumber,
-        debateElements
+        null
       )
       console.log(`✅ Captured ${discoveryType} for step ${stepNumber}`)
     }
+  }
 
-    return {
-      success: true,
-      message: `Captured student ${discoveryType}${
-        partSolved ? ` on ${partSolved}` : ""
-      }`,
-      currentExpression: currentExpression,
-      stepNumber: stepNumber,
+  /**
+   * Handle visual feedback for brainstorming
+   */
+  handleShowVisualFeedback(text) {
+    console.log(`🔧 BrainStormer Agent - Showing visual feedback`)
+
+    // Extract feedback type from context
+    let type = "discovery"
+    let content = "💡"
+    let label = "Great thinking!"
+
+    if (text.includes('celebration')) {
+      type = "celebration"
+      content = "🎉"
+      label = "Excellent discovery!"
+    } else if (text.includes('breakthrough')) {
+      type = "breakthrough"
+      content = "⚡"
+      label = "Breakthrough moment!"
+    } else if (text.includes('debate')) {
+      type = "debate"
+      content = "⚖️"
+      label = "Comparing approaches..."
+    } else if (text.includes('synthesis')) {
+      type = "synthesis"
+      content = "🔗"
+      label = "Connecting ideas..."
     }
-  },
-})
 
-const showVisualFeedbackTool = tool({
-  name: "showVisualFeedback",
-  description:
-    "Shows visual feedback for discoveries, debates, and breakthroughs during brainstorming.",
-  parameters: {
-    type: "object",
-    properties: {
-      type: {
-        type: "string",
-        description: "Type of visual feedback",
-        enum: [
-          "celebration",
-          "discovery",
-          "progress",
-          "breakthrough",
-          "debate",
-          "comparison",
-          "synthesis",
-        ],
-      },
-      content: {
-        type: "string",
-        description: "The visual content (emoji, symbol, or text)",
-      },
-      label: {
-        type: "string",
-        description: "Message about the discovery or insight",
-      },
-      expressionPart: {
-        type: "string",
-        description: "The part of the problem this relates to",
-      },
-      stepNumber: {
-        type: "number",
-        description: "Which step this feedback relates to",
-      },
-    },
-    required: ["type", "content", "label"],
-    additionalProperties: false,
-  },
-  execute: async (input) => {
-    const { type, content, label, expressionPart, stepNumber } = input
-    console.log(`🔧 Tool Called - Showing ${type} feedback:`, input)
+    const stepNumber = this.currentStep
 
     // Trigger UI update through global callback if available
     if (typeof window !== "undefined" && window.handleVisualFeedback) {
@@ -163,21 +97,48 @@ const showVisualFeedbackTool = tool({
         label,
         stepNumber,
         undefined,
-        expressionPart
+        "current problem part"
       )
       console.log(`✅ Showed ${type} feedback for step ${stepNumber}`)
     }
+  }
 
-    return {
-      success: true,
-      message: `${type} feedback shown successfully`,
+  /**
+   * Extract discovery type from text context
+   */
+  extractDiscoveryType(text) {
+    const types = [
+      "initial_observation",
+      "part_identified", 
+      "calculation_done",
+      "pattern_found",
+      "breakthrough",
+      "debate_point",
+      "approach_comparison",
+      "synthesis"
+    ]
+
+    for (const type of types) {
+      if (text.includes(type.replace('_', ' '))) {
+        return type
+      }
     }
-  },
-})
 
-export const brainStormerAgent = new RealtimeAgent({
+    return "initial_observation"
+  }
+
+  /**
+   * Override activation to reset step tracking
+   */
+  async activate(session) {
+    await super.activate(session)
+    this.currentStep = 1
+  }
+}
+
+const brainStormerAgent = new BrainStormerAgent({
   name: "brainStormer",
-  voice: "sage",
+  voice: "Kore",
   handoffDescription:
     "A natural brainstorming tutor that guides students through discovery using the ASK → EXPLORE → CONNECT framework.",
   instructions: `You have to speak only in English. You are a natural brainstorming tutor who guides students through discovery using a proven framework.
@@ -218,46 +179,18 @@ ${problemData.steps
 - "How do all these discoveries connect?"
 - "What did we discover together?"
 
-## Natural Conversation Techniques
-
-### Discovery Questions (Use Throughout):
-- "What comes to mind when I say...?"
-- "Tell me more about that"
-- "How does this connect to...?"
-- "What pattern do you see?"
-- "That's interesting because..."
-
-### Building on Student Ideas:
-- "Yes, and..." (expand their thinking)
-- "Ooh, that's one way! What about...?" (introduce alternatives)
-- "Let's test that idea - what if...?" (explore deeper)
-- "You're onto something! How does that work with...?" (connect to other concepts)
-
-### Natural Transitions (Never say "step"):
-- "Now that we've discovered X, what about Y?"
-- "That gives me another idea to explore..."
-- "Building on that thought..."
-- "Let's take this further..."
-
-## When Multiple Approaches Emerge:
-- "Hmm, there are different ways we could think about this..."
-- "Some people might say X, while others think Y... what do you think?"
-- "Let's compare these ideas and see what happens!"
-- Use showVisualFeedback with type="debate" or "comparison"
-
 ## Tool Usage Guidelines
 
 ### updateBrainstormNotes:
-- Use for every significant discovery
+- Mention "updateBrainstormNotes" for every significant discovery
 - Track the natural progression of understanding
-- Include debateElements when comparing approaches
-- Always specify the current stepNumber (1-${problemData.steps.length})
+- Always specify the current learning area (1-${problemData.steps.length})
 
 ### showVisualFeedback:
-- "discovery" - for initial observations and aha moments
-- "debate" - when naturally comparing different approaches  
-- "breakthrough" - for major insights and connections
-- "synthesis" - when connecting multiple ideas together
+- Mention "showVisualFeedback discovery" for initial observations and aha moments
+- Mention "showVisualFeedback debate" when naturally comparing different approaches  
+- Mention "showVisualFeedback breakthrough" for major insights and connections
+- Mention "showVisualFeedback synthesis" when connecting multiple ideas together
 
 ## Your Personality & Style:
 - **Curious & Enthusiastic**: Show genuine excitement for their ideas
@@ -273,7 +206,14 @@ ${problemData.steps
 - End with synthesis and clear sense of discovery
 - Prepare for handoff to closer agent
 
-Remember: This should feel like an exciting conversation with a curious friend who happens to know how to guide discovery. Never mention "steps" or make it feel like a curriculum. Let their natural curiosity drive the exploration!`,
-  handoffs: [closerAgent],
-  tools: [updateBrainstormNotesTool, showVisualFeedbackTool],
+Remember: This should feel like an exciting conversation with a curious friend who happens to know how to guide discovery. Use the trigger phrases seamlessly to activate the UI functionality without explicitly mentioning tools.`,
+  systemInstructions: `You are the brainStormer agent for an AI tutoring system. Your role is to facilitate natural discovery learning through the ASK → EXPLORE → CONNECT framework. Use trigger phrases like "updateBrainstormNotes", "showVisualFeedback" to activate UI functionality seamlessly.`,
+  handoffs: nextAgents,
 })
+
+// Function to set handoffs after all agents are created
+const setBrainStormerHandoffs = (handoffs) => {
+  brainStormerAgent.handoffs = handoffs
+}
+
+export { brainStormerAgent, setBrainStormerHandoffs }

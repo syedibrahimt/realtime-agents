@@ -1,134 +1,105 @@
-import { RealtimeAgent, tool } from "@openai/agents-realtime"
+import { GeminiAgent } from "../../gemini/GeminiAgent"
 import problemData from "../../../hard3.json"
-import { closerAgent } from "./closer"
 
-const updateNotesTool = tool({
-  name: "updateNotes",
-  description:
-    "Updates the tutoring notes when steps are completed. Can handle multiple steps at once.",
-  parameters: {
-    type: "object",
-    properties: {
-      steps: {
-        type: "array",
-        description: "Array of step information objects that were completed",
-        items: {
-          type: "object",
-          properties: {
-            stepNumber: {
-              type: "number",
-              description: "The step number that was completed",
-            },
-            description: {
-              type: "string",
-              description: "Description of what was accomplished in this step",
-            },
-            updatedExpression: {
-              type: "string",
-              description:
-                "The updated mathematical expression after this step",
-            },
-          },
-          required: ["stepNumber", "description", "updatedExpression"],
-        },
-      },
-    },
-    required: ["steps"],
-    additionalProperties: false,
-  },
-  execute: async (input) => {
-    const { steps } = input
-    console.log(`🔧 Tool Called - Updating ${steps.length} steps:`, steps)
+// Note: handoffs will be set after all agents are created to avoid circular dependencies
+let nextAgents = []
 
-    let lastStepData = null
+class StepTutorAgent extends GeminiAgent {
+  constructor(config) {
+    super(config)
+    this.currentStep = 1
+    this.currentQuestionIndex = 0
+  }
 
-    // Process each step in sequence
-    for (const step of steps) {
-      const { stepNumber, description, updatedExpression } = step
-
-      // Validate step number
-      if (stepNumber < 1 || stepNumber > problemData.steps.length) {
-        console.error(
-          `❌ Invalid step number: ${stepNumber}. Valid range: 1-${problemData.steps.length}`
-        )
-        continue
-      }
-
-      // Find the corresponding step data (0-indexed in the array)
-      const stepData = problemData.steps[stepNumber - 1]
-      if (!stepData) {
-        console.error(`❌ Step data not found for step ${stepNumber}`)
-        continue
-      }
-
-      // Trigger UI update through global callback if available
-      if (typeof window !== "undefined" && window.handleStepCompletion) {
-        window.handleStepCompletion(stepNumber, description, updatedExpression)
-        console.log(`✅ Updated notes for step ${stepNumber}`)
-      }
-
-      lastStepData = stepData
+  /**
+   * Process incoming messages and handle tool calls
+   */
+  processMessage(data) {
+    super.processMessage(data)
+    
+    // Check if we need to handle tools
+    if (this.isActive && data.serverContent?.modelTurn) {
+      const parts = data.serverContent.modelTurn.parts
+      
+      parts.forEach(part => {
+        if (part.text) {
+          // Check for tool calls in the text
+          if (part.text.includes('updateNotes')) {
+            this.handleUpdateNotes()
+          }
+          if (part.text.includes('showVisualFeedback')) {
+            this.handleShowVisualFeedback(part.text)
+          }
+        }
+      })
     }
+  }
 
-    return {
-      success: true,
-      message: `Notes updated for ${steps.length} steps`,
-      stepTitle: lastStepData?.Topic,
-      totalSteps: problemData.steps.length,
-    }
-  },
-})
+  /**
+   * Handle updateNotes tool functionality
+   */
+  handleUpdateNotes() {
+    console.log(`🔧 StepTutor Agent - Updating notes`)
 
-const showVisualFeedbackTool = tool({
-  name: "showVisualFeedback",
-  description:
-    "Shows visual feedback in the main area based on student responses or before asking questions.",
-  parameters: {
-    type: "object",
-    properties: {
-      type: {
-        type: "string",
-        description: "Type of visual feedback to show",
-        enum: ["hint", "success", "illustration"],
-      },
-      content: {
-        type: "string",
-        description: "The content of the visual feedback (text or emoji)",
-      },
-      label: {
-        type: "string",
-        description: "The label for the visual feedback",
-      },
-      stepNumber: {
-        type: "number",
-        description: "The step number this feedback relates to",
-      },
-      questionIndex: {
-        type: "number",
-        description:
-          "The index of the conceptual question this feedback relates to",
-      },
-    },
-    required: ["type", "content", "label", "stepNumber"],
-    additionalProperties: false,
-  },
-  execute: async (input) => {
-    const { type, content, label, stepNumber, questionIndex } = input
-    console.log(`🔧 Tool Called - Showing ${type} feedback:`, input)
-
-    // Validate step number
-    if (stepNumber < 1 || stepNumber > problemData.steps.length) {
-      console.error(
-        `❌ Invalid step number: ${stepNumber}. Valid range: 1-${problemData.steps.length}`
-      )
-      return { success: false, message: "Invalid step number" }
-    }
-
-    // Find the corresponding step data (0-indexed in the array)
-    const stepData = problemData.steps[stepNumber - 1]
+    // Extract step information from the context
+    // For now, we'll use the current step data
+    const stepData = problemData.steps[this.currentStep - 1]
     if (!stepData) {
-      console.error(`❌ Step data not found for step ${stepNumber}`)
-      return { success: false, message: "Step data not found" }
+      console.error(`❌ Step data not found for step ${this.currentStep}`)
+      return
+    }
+
+    const stepNumber = this.currentStep
+    const description = stepData.Notes.Description
+    const updatedExpression = stepData.Notes.UpdatedExpression
+
+    // Trigger UI update through global callback if available
+    if (typeof window !== "undefined" && window.handleStepCompletion) {
+      window.handleStepCompletion(stepNumber, description, updatedExpression)
+      console.log(`✅ Updated notes for step ${stepNumber}`)
+    }
+
+    // Move to next step
+    this.currentStep++
+  }
+
+  /**
+   * Handle showVisualFeedback tool functionality
+   */
+  handleShowVisualFeedback(text) {
+    console.log(`🔧 StepTutor Agent - Showing visual feedback`)
+
+    // Extract feedback type from context
+    let type = "illustration"
+    let content = "🎯"
+    let label = "Visual Feedback"
+    
+    if (text.includes('hint')) {
+      type = "hint"
+      content = "🤔"
+      label = "Think about this..."
+    } else if (text.includes('success')) {
+      type = "success"
+      content = "✅"
+      label = "Correct!"
+    }
+
+    const stepNumber = this.currentStep
+    const questionIndex = this.currentQuestionIndex
+
+    // Get actual content from problem data if available
+    const stepData = problemData.steps[stepNumber - 1]
+    if (stepData) {
+      if (type === "illustration" && stepData.Illustration?.BeforeQuestion) {
+        content = stepData.Illustration.BeforeQuestion.Content
+        label = stepData.Illustration.BeforeQuestion.Label
+      } else if (type === "success" && stepData.Illustration?.Feedback?.Success) {
+        content = stepData.Illustration.Feedback.Success.Content
+        label = stepData.Illustration.Feedback.Success.Label
+      } else if (type === "hint" && stepData.Illustration?.Feedback?.Hint) {
+        content = stepData.Illustration.Feedback.Hint.Content
+        label = stepData.Illustration.Feedback.Hint.Label
+      }
     }
 
     // Trigger UI update through global callback if available
@@ -142,13 +113,17 @@ const showVisualFeedbackTool = tool({
       )
       console.log(`✅ Showed ${type} feedback for step ${stepNumber}`)
     }
+  }
 
-    return {
-      success: true,
-      message: `${type} feedback shown successfully`,
-    }
-  },
-})
+  /**
+   * Override activation to reset step tracking
+   */
+  async activate(session) {
+    await super.activate(session)
+    this.currentStep = 1
+    this.currentQuestionIndex = 0
+  }
+}
 
 // Helper function to generate dynamic step instructions
 const generateStepInstructions = (steps) => {
@@ -174,9 +149,9 @@ const generateStepCompletionData = (steps) => {
     .join("\n")
 }
 
-export const stepTutorAgent = new RealtimeAgent({
+const stepTutorAgent = new StepTutorAgent({
   name: "stepTutor",
-  voice: "sage",
+  voice: "Kore",
   handoffDescription:
     "The agent that guides the student through the problem-solving process step by step.",
   instructions: `You have to speak only in English. You will guide the student through the problem-solving process for the following problem: ${
@@ -189,85 +164,57 @@ Problem Details:
 - Total Steps: ${problemData.steps.length}
 
 Follow these steps:
-- For each step in the steps array, first show the illustration's BeforeQuestion content using showVisualFeedbackTool, then ask ALL conceptual questions from that step sequentially.
+- For each step in the steps array, first show the illustration's BeforeQuestion content by mentioning "showVisualFeedback", then ask ALL conceptual questions from that step sequentially.
 ${generateStepInstructions(problemData.steps)}
 
 Process:
-1. Before starting a step, use showVisualFeedbackTool to display the Illustration.BeforeQuestion for that step
+1. Before starting a step, mention "showVisualFeedback" to display the Illustration.BeforeQuestion for that step
 2. Ask all conceptual questions for a step, one at a time
 3. Wait for the student's answer after each question
 4. If the answer is correct:
-   - Use showVisualFeedbackTool to display the Illustration.Feedback.Success feedback
+   - Mention "showVisualFeedback success" to display the success feedback
    - Acknowledge and continue to the next question in the step
 5. If the answer is incorrect:
-   - Use showVisualFeedbackTool to display the Illustration.Feedback.Hint feedback visually
-   - Speak the Illustration.Feedback.Hint.Content to the student
+   - Mention "showVisualFeedback hint" to display the hint feedback visually
+   - Speak the hint content to the student
    - Wait for a second attempt from the student
    - If the second attempt is also incorrect, provide the correct answer and move to the next question
    - If the second attempt is correct, acknowledge and continue to the next question
-6. After completing questions for one or more steps, you MUST automatically and silently call the updateNotes tool (do NOT announce this to the student)
+6. After completing questions for one or more steps, mention "updateNotes" (this will trigger automatic note updates)
 7. Move to the next step and repeat
 8. IMPORTANT: If a student answers questions from multiple steps in a single response, update multiple steps at once
 
-CRITICAL: When one or more steps are completed, you MUST call the updateNotes tool with data for all completed steps:
+CRITICAL: When one or more steps are completed, you MUST mention "updateNotes" to trigger the step completion tracking:
 ${generateStepCompletionData(problemData.steps)}
 
 Visual Feedback Instructions:
-- Before asking questions for a step, show the BeforeQuestion illustration:
-  showVisualFeedback({ 
-    type: "illustration", 
-    content: "[step's Illustration.BeforeQuestion.Content]", 
-    label: "[step's Illustration.BeforeQuestion.Label]", 
-    stepNumber: [step number] 
-  })
-- When student gives correct answer, show success feedback:
-  showVisualFeedback({ 
-    type: "success", 
-    content: "[Illustration.Feedback.Success.Content]", 
-    label: "[Illustration.Feedback.Success.Label]", 
-    stepNumber: [step number], 
-    questionIndex: [question index] 
-  })
-- When student gives incorrect answer, show hint feedback:
-  showVisualFeedback({ 
-    type: "hint", 
-    content: "[Illustration.Feedback.Hint.Content]", 
-    label: "[Illustration.Feedback.Hint.Label]", 
-    stepNumber: [step number], 
-    questionIndex: [question index] 
-  })
-  Then verbally say the hint content (Illustration.Feedback.Hint.Content) and wait for a second attempt
+- Before asking questions for a step, mention "showVisualFeedback" to show the BeforeQuestion illustration
+- When student gives correct answer, mention "showVisualFeedback success" to show success feedback
+- When student gives incorrect answer, mention "showVisualFeedback hint" to show hint feedback, then verbally provide the hint content and wait for a second attempt
 
 Tool Calling Instructions:
-- Call updateNotes immediately after completing questions for one or more steps
-- If multiple steps are completed in one response, include ALL completed steps in a single tool call
-- Pass an array of step objects with the correct stepNumber, description, and updatedExpression
-- Example for multiple steps:
-  updateNotes({ steps: [
-    { stepNumber: 1, description: "...", updatedExpression: "..." },
-    { stepNumber: 2, description: "...", updatedExpression: "..." }
-  ]})
-- Example for single step:
-  updateNotes({ steps: [
-    { stepNumber: 1, description: "...", updatedExpression: "..." }
-  ]})
-- Do this silently without mentioning it to the student
+- Mention "updateNotes" immediately after completing questions for one or more steps
+- Do this seamlessly without explicitly announcing it to the student
 - This is MANDATORY for each completed step
 
-DO NOT mention updating notes, taking notes, or any reference to the tools in your conversation with the student. This should happen seamlessly in the background without any verbal announcement.
+DO NOT explicitly mention updating notes, taking notes, or any reference to the tools in your conversation with the student. Simply mention the trigger words and the system will handle the functionality.
 
 Example Interaction for Incorrect Answer:
 1. You: "What's inside the innermost parentheses?"
 2. Student: "3 times 1" (incorrect answer)
-3. You: [Call showVisualFeedbackTool with type="hint", content="🤔", label="What's inside the parentheses?"]
+3. You: "showVisualFeedback hint" [system shows hint visual]
 4. You: "That's not quite right. Let's look closer at the expression (3 + 1). The operation between 3 and 1 is addition, not multiplication."
 5. Student: "Oh, it's 3 plus 1" (correct on second try)
 6. You: "That's right!"
-OR
-5. Student: "It's 3 divided by 1" (still incorrect on second try)
-6. You: "Actually, the correct operation is addition. In (3 + 1), we have 3 plus 1, which equals 4. Let's continue."
 
 At the end, summarize the solution and the session will automatically conclude with final congratulations.`,
-  handoffs: [closerAgent],
-  tools: [updateNotesTool, showVisualFeedbackTool],
+  systemInstructions: `You are the stepTutor agent for an AI tutoring system. Your role is to guide students through complex problem-solving step by step, providing visual feedback and tracking their progress. Use the trigger words "showVisualFeedback", "updateNotes" to activate the UI functionality seamlessly.`,
+  handoffs: nextAgents,
 })
+
+// Function to set handoffs after all agents are created
+const setStepTutorHandoffs = (handoffs) => {
+  stepTutorAgent.handoffs = handoffs
+}
+
+export { stepTutorAgent, setStepTutorHandoffs }
