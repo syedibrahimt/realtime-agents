@@ -1,10 +1,9 @@
 import { useState, useEffect, useRef, useCallback } from "react"
-import { RealtimeSession } from "@openai/agents-realtime"
 import "./App.css"
 import "./visualFeedback.css"
-import { aiTutoring } from "./agents/tutor"
-import mathData from "../hard4.json" // Updated to use hard3.json
-import { OPENAI_API_KEY, OPENAI_API_URL } from "../env"
+import { AdkWebSocketClient } from "./services/AdkWebSocketClient"
+import mathData from "../hard4.json"
+import { ADK_BACKEND_URL } from "../env"
 
 // Star background component with animation controlled by isConnected
 const StarBackground = ({ isConnected }) => {
@@ -422,17 +421,28 @@ function App() {
   const [completedSteps, setCompletedSteps] = useState([])
   const [visualFeedback, setVisualFeedback] = useState(null)
 
-  // Initialize session
+  // Initialize ADK client
   useEffect(() => {
     try {
-      if (aiTutoring?.greeterAgent) {
-        // Start with the greeter agent, which will handle the proper flow
-        session.current = new RealtimeSession(aiTutoring.brainStormerAgent)
-      } else {
-        throw new Error("Greeter agent not available")
-      }
+      session.current = new AdkWebSocketClient()
+      
+      // Set up event listeners
+      session.current.on('connected', () => {
+        console.log('ADK client connected')
+      })
+      
+      session.current.on('disconnect', () => {
+        console.log('ADK client disconnected')
+        setIsConnected(false)
+      })
+      
+      session.current.on('error', (error) => {
+        console.error('ADK client error:', error)
+        setMessage(`Error: ${error.message || 'Unknown error'}`)
+      })
+      
     } catch (error) {
-      console.error("Failed to initialize session:", error)
+      console.error("Failed to initialize ADK client:", error)
       setSessionError(error.message)
       setMessage("Failed to initialize tutoring session")
     }
@@ -632,25 +642,10 @@ function App() {
 
 
 
+  // No need for client secret with ADK backend
   useEffect(() => {
-    fetch(OPENAI_API_URL, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${OPENAI_API_KEY}`,
-      },
-      body: JSON.stringify({
-        model: "gpt-4o-realtime-preview-2025-06-03",
-      }),
-    })
-      .then((res) => res.json())
-      .then((data) => {
-        setClientSecret(data.client_secret.value)
-      })
-      .catch((err) => {
-        console.error(err)
-        setMessage("Failed to initialize session. Please try again.")
-      })
+    // Mark as ready to connect
+    setClientSecret("ready")
   }, [])
 
   const handleConnect = async () => {
@@ -661,26 +656,11 @@ function App() {
       setMessage("Connecting to AI tutor...")
 
       if (!session.current) {
-        throw new Error("Session not initialized")
+        throw new Error("ADK client not initialized")
       }
 
-      // For debugging visual feedback on initial connection
-      // Comment this out for production
-      /*
-      setTimeout(() => {
-        // Show illustration first
-        handleVisualFeedback(
-          'illustration',
-          '(3 + 1)',
-          'The innermost parentheses',
-          1,
-          0
-        );
-      }, 2000);
-      */
-
       await session.current.connect({
-        apiKey: clientSecret,
+        backendUrl: ADK_BACKEND_URL,
       })
 
       setIsConnected(true)

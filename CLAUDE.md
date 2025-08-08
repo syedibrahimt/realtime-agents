@@ -4,19 +4,25 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Development Commands
 
+### Frontend
 - **Development server**: `npm run dev` - Starts Vite development server
 - **Production build**: `npm run build` - Creates optimized build in `dist/`
 - **Linting**: `npm run lint` - Runs ESLint with React and React Hooks rules
 - **Preview build**: `npm run preview` - Serves production build locally
 
+### Backend (Google ADK)
+- **Start backend**: `./start_backend.sh` - Starts Python FastAPI backend with ADK
+- **Manual start**: `cd backend && python simple_main.py` - Direct backend startup
+
 ## Architecture Overview
 
-This is a React-based AI tutoring application using OpenAI's Realtime API with a multi-agent architecture. The app provides interactive math/science tutoring through voice conversations with visual feedback.
+This is a React-based AI tutoring application **MIGRATED from OpenAI to Google ADK** with a multi-agent architecture. The app provides interactive math/science tutoring through voice conversations with visual feedback.
 
 ### Core Structure
 
-- **Frontend**: React 19 + Vite, using `@openai/agents-realtime` for real-time AI interactions
-- **Agent System**: Multi-agent architecture in `src/agents/tutor/` with specialized roles:
+- **Frontend**: React 19 + Vite, using custom `AdkWebSocketClient` for real-time communication
+- **Backend**: Python FastAPI server with Google ADK integration
+- **Agent System**: Multi-agent architecture migrated to Google ADK with specialized roles:
   - `greeterAgent`: Welcome and session initialization 
   - `introGiverAgent`: Concept introduction with visual elements
   - `questionReaderAgent`: Question presentation and handling
@@ -52,8 +58,14 @@ This is a React-based AI tutoring application using OpenAI's Realtime API with a
 
 ### Environment Setup
 
-- Requires `OPENAI_API_KEY` and `OPENAI_API_URL` in `env.js`
-- Uses OpenAI's gpt-4o-realtime-preview model
+#### Frontend
+- Configuration in `env.js` with `ADK_BACKEND_URL` pointing to backend WebSocket
+- No API keys needed in frontend (handled by backend)
+
+#### Backend  
+- Requires `GOOGLE_API_KEY` in `backend/.env`
+- Uses Google Gemini 2.0 Flash model via ADK
+- FastAPI server handles WebSocket connections and agent interactions
 
 ### Agent Flow Logic
 
@@ -62,3 +74,4 @@ Agents are conditionally chained based on `isConceptIntroductionEnabled` flag in
 - If disabled: greeter → questionReader → stepTutor → closer
 
 The brainStormer agent can be used as an alternative initial agent for more exploratory learning sessions.
+- to memorize
