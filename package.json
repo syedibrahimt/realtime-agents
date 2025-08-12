@@ -7,12 +7,14 @@
     "dev": "vite",
     "build": "vite build",
     "lint": "eslint .",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "backend": "cd backend && source venv/bin/activate && python main.py",
+    "start-all": "concurrently \"npm run backend\" \"npm run dev\""
   },
   "dependencies": {
-    "@openai/agents-realtime": "^0.0.10",
     "react": "^19.1.0",
-    "react-dom": "^19.1.0"
+    "react-dom": "^19.1.0",
+    "concurrently": "^8.2.2"
   },
   "devDependencies": {
     "@eslint/js": "^9.30.1",

@@ -1,10 +1,9 @@
 import { useState, useEffect, useRef, useCallback } from "react"
-import { RealtimeSession } from "@openai/agents-realtime"
+import { AdkWebSocketClient } from "./services/AdkWebSocketClient"
 import "./App.css"
 import "./visualFeedback.css"
-import { aiTutoring } from "./agents/tutor"
-import mathData from "../hard4.json" // Updated to use hard3.json
-import { OPENAI_API_KEY, OPENAI_API_URL } from "../env"
+import mathData from "../hard4.json"
+import { ADK_HTTP_URL } from "../env"
 
 // Star background component with animation controlled by isConnected
 const StarBackground = ({ isConnected }) => {
@@ -395,10 +394,9 @@ const NotesArea = ({ isVisible = false, completedSteps = [] }) => {
 }
 
 function App() {
-  // Initialize session with error handling
-  const session = useRef(null)
+  // Initialize ADK WebSocket client
+  const client = useRef(null)
   const [sessionError, setSessionError] = useState(null)
-  const [clientSecret, setClientSecret] = useState()
   const [isConnected, setIsConnected] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
   const [message, setMessage] = useState(
@@ -422,19 +420,54 @@ function App() {
   const [completedSteps, setCompletedSteps] = useState([])
   const [visualFeedback, setVisualFeedback] = useState(null)
 
-  // Initialize session
+  // Initialize ADK WebSocket client
   useEffect(() => {
     try {
-      if (aiTutoring?.greeterAgent) {
-        // Start with the greeter agent, which will handle the proper flow
-        session.current = new RealtimeSession(aiTutoring.brainStormerAgent)
-      } else {
-        throw new Error("Greeter agent not available")
-      }
+      client.current = new AdkWebSocketClient()
+      
+      // Set up event listeners
+      client.current.on('connected', () => {
+        setIsConnected(true)
+        setIsLoading(false)
+      })
+      
+      client.current.on('disconnected', () => {
+        setIsConnected(false)
+        setIsMicrophoneMuted(false)
+        setIsPushToTalkActive(false)
+      })
+      
+      client.current.on('error', (error) => {
+        console.error("ADK client error:", error)
+        setMessage(`Connection error: ${error.message}`)
+        setIsLoading(false)
+      })
+      
+      // Set up audio transcript handling
+      client.current.on('response.audio_transcript.delta', (event) => {
+        // Handle partial transcripts if needed
+        console.log("Transcript delta:", event.transcript)
+      })
+      
+      client.current.on('response.done', () => {
+        console.log("Agent response completed")
+      })
+      
+      client.current.on('agent.switched', (event) => {
+        console.log("Agent switched to:", event.agent)
+      })
+      
     } catch (error) {
-      console.error("Failed to initialize session:", error)
+      console.error("Failed to initialize ADK client:", error)
       setSessionError(error.message)
       setMessage("Failed to initialize tutoring session")
+    }
+    
+    return () => {
+      // Cleanup on unmount
+      if (client.current) {
+        client.current.disconnect().catch(console.error)
+      }
     }
   }, [])
 
@@ -590,8 +623,8 @@ function App() {
       if ((event.code === pushToTalkKey || event.key === ' ') && !isPushToTalkActive && !event.repeat) {
         event.preventDefault()
         setIsPushToTalkActive(true)
-        if (session.current) {
-          session.current.mute(false)
+        if (client.current) {
+          client.current.mute(false)
           setIsMicrophoneMuted(false)
         }
       }
@@ -602,8 +635,8 @@ function App() {
       if ((event.code === pushToTalkKey || event.key === ' ') && isPushToTalkActive) {
         event.preventDefault()
         setIsPushToTalkActive(false)
-        if (session.current) {
-          session.current.mute(true)
+        if (client.current) {
+          client.current.mute(true)
           setIsMicrophoneMuted(true)
         }
       }
@@ -623,8 +656,8 @@ function App() {
   useEffect(() => {
     if (isConnected) {
       // Always start muted in push-to-talk mode
-      if (session.current) {
-        session.current.mute(true)
+      if (client.current) {
+        client.current.mute(true)
         setIsMicrophoneMuted(true)
       }
     }
@@ -632,80 +665,51 @@ function App() {
 
 
 
+  // Health check for ADK backend
   useEffect(() => {
-    fetch(OPENAI_API_URL, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${OPENAI_API_KEY}`,
-      },
-      body: JSON.stringify({
-        model: "gpt-4o-realtime-preview-2025-06-03",
-      }),
-    })
-      .then((res) => res.json())
-      .then((data) => {
-        setClientSecret(data.client_secret.value)
-      })
-      .catch((err) => {
-        console.error(err)
-        setMessage("Failed to initialize session. Please try again.")
-      })
+    const checkBackendHealth = async () => {
+      try {
+        const response = await fetch(`${ADK_HTTP_URL}/health`)
+        if (!response.ok) {
+          throw new Error('Backend health check failed')
+        }
+        console.log('ADK backend is healthy')
+      } catch (error) {
+        console.error('Backend health check failed:', error)
+        setMessage("Backend server is not available. Please start the backend.")
+      }
+    }
+    
+    checkBackendHealth()
   }, [])
 
   const handleConnect = async () => {
-    if (!clientSecret || isConnected) return
+    if (isConnected || !client.current) return
 
     try {
       setIsLoading(true)
       setMessage("Connecting to AI tutor...")
 
-      if (!session.current) {
-        throw new Error("Session not initialized")
-      }
-
-      // For debugging visual feedback on initial connection
-      // Comment this out for production
-      /*
-      setTimeout(() => {
-        // Show illustration first
-        handleVisualFeedback(
-          'illustration',
-          '(3 + 1)',
-          'The innermost parentheses',
-          1,
-          0
-        );
-      }, 2000);
-      */
-
-      await session.current.connect({
-        apiKey: clientSecret,
-      })
-
-      setIsConnected(true)
+      await client.current.connect()
+      
+      // Connection state will be updated by event listeners
     } catch (err) {
       console.error("Connection error:", err)
       setMessage(`Failed to connect: ${err.message || "Unknown error"}`)
-    } finally {
       setIsLoading(false)
     }
   }
 
   const handleDisconnect = async () => {
-    if (!isConnected) return
+    if (!isConnected || !client.current) return
 
     try {
       setIsLoading(true)
       setMessage("Disconnecting...")
 
-      if (!session.current) {
-        throw new Error("Session not found")
-      }
-
-      await session.current.close()
-
-      setIsConnected(false)
+      await client.current.disconnect()
+      
+      // Disconnection state will be updated by event listeners
     } catch (err) {
       console.error("Disconnection error:", err)
       setMessage(`Failed to disconnect: ${err.message || "Unknown error"}`)
@@ -823,7 +827,7 @@ function App() {
                   isConnected ? "disabled" : ""
                 }`}
                 onClick={handleConnect}
-                disabled={isLoading || isConnected || !clientSecret}
+                disabled={isLoading || isConnected}
               >
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
