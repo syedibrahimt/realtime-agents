@@ -92,14 +92,14 @@
       }
     },
     {
-      "Topic": "The Particle Model Debate",
+      "Topic": "The Particle Debate",
       "Description": "Let's explore different ways to think about what's happening to the particles in ice, water, and steam.",
       "ConceptualQuestions": [
         {
           "Goal": "Introduce competing models of particle behavior",
           "Illustration": {
             "BeforeQuestion": {
-              "Content": "Model A: Particles change size | Model B: Particles change spacing | Model C: Particles change speed",
+              "Content": "A: Particles change size | B: Particles change spacing | C: Particles change speed",
               "Label": "Three ways to explain state changes",
               "Type": "text"
             },

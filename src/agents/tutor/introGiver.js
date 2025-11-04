@@ -1,5 +1,5 @@
 import { RealtimeAgent, tool } from "@openai/agents-realtime"
-import problemData from "../../../hard3.json"
+import problemData from "../../../hard4.json"
 import { questionReaderAgent } from "./questionReader"
 
 const showIntroVisualTool = tool({

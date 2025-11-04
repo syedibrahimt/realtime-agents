@@ -1,5 +1,5 @@
 import { RealtimeAgent } from "@openai/agents-realtime"
-import problemData from "../../../hard3.json"
+import problemData from "../../../hard4.json"
 // import { stepTutorAgent } from "./stepTutor"
 import { brainStormerAgent } from "./brainStormer"
 
@@ -8,6 +8,6 @@ export const questionReaderAgent = new RealtimeAgent({
   voice: "sage",
   handoffDescription:
     "The agent that reads out the question/problem with options and routes them to the correct downstream agent.",
-  instructions: `You have to speak only in English. Ask the student whether they want to read the the question read out loud or not. If they say yes, read the ${problemData.problem} and ${problemData.options} to them. Once the question has been presented, the tutoring session will automatically begin.`,
+  instructions: `You have to speak only in English. Ask the student whether they want to read the the question read out loud or not. If they say yes, read the ${problemData.questionData.QuestionText} and ${problemData.questionData.Options} to them. Once the question has been presented, the tutoring session will automatically begin.`,
   handoffs: [brainStormerAgent],
 })
