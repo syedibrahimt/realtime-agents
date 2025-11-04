@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef, useCallback } from "react"
-import { AdkWebSocketClient } from "./services/AdkWebSocketClient"
+import { RealtimeSession } from "@openai/agents/realtime"
 import "./App.css"
 import "./visualFeedback.css"
 import mathData from "../hard4.json"
@@ -403,15 +403,19 @@ function App() {
     "Click 'Connect' to start a tutoring session"
   )
 
-   // Push-to-talk state management (always enabled)
+  // Push-to-talk state management (always enabled)
   const [isMicrophoneMuted, setIsMicrophoneMuted] = useState(false)
   const [isPushToTalkActive, setIsPushToTalkActive] = useState(false)
-  const [pushToTalkKey] = useState('Space')
-  
+  const [pushToTalkKey] = useState("Space")
+
   // Update message for push-to-talk mode
   useEffect(() => {
     if (isConnected) {
-      setMessage(`Connected! Hold ${pushToTalkKey === 'Space' ? 'Spacebar' : pushToTalkKey} to talk.`)
+      setMessage(
+        `Connected! Hold ${
+          pushToTalkKey === "Space" ? "Spacebar" : pushToTalkKey
+        } to talk.`
+      )
     } else {
       setMessage("Click 'Connect' to start a tutoring session")
     }
@@ -620,7 +624,11 @@ function App() {
 
     const handleKeyDown = (event) => {
       // Only activate if the key matches our push-to-talk key and we're not already active
-      if ((event.code === pushToTalkKey || event.key === ' ') && !isPushToTalkActive && !event.repeat) {
+      if (
+        (event.code === pushToTalkKey || event.key === " ") &&
+        !isPushToTalkActive &&
+        !event.repeat
+      ) {
         event.preventDefault()
         setIsPushToTalkActive(true)
         if (client.current) {
@@ -632,7 +640,10 @@ function App() {
 
     const handleKeyUp = (event) => {
       // Deactivate when the key is released
-      if ((event.code === pushToTalkKey || event.key === ' ') && isPushToTalkActive) {
+      if (
+        (event.code === pushToTalkKey || event.key === " ") &&
+        isPushToTalkActive
+      ) {
         event.preventDefault()
         setIsPushToTalkActive(false)
         if (client.current) {
@@ -643,12 +654,12 @@ function App() {
     }
 
     // Add event listeners to the document
-    document.addEventListener('keydown', handleKeyDown)
-    document.addEventListener('keyup', handleKeyUp)
+    document.addEventListener("keydown", handleKeyDown)
+    document.addEventListener("keyup", handleKeyUp)
 
     return () => {
-      document.removeEventListener('keydown', handleKeyDown)
-      document.removeEventListener('keyup', handleKeyUp)
+      document.removeEventListener("keydown", handleKeyDown)
+      document.removeEventListener("keyup", handleKeyUp)
     }
   }, [isConnected, isPushToTalkActive, pushToTalkKey])
 
@@ -663,24 +674,28 @@ function App() {
     }
   }, [isConnected])
 
-
-
-  // Health check for ADK backend
   useEffect(() => {
-    const checkBackendHealth = async () => {
-      try {
-        const response = await fetch(`${ADK_HTTP_URL}/health`)
-        if (!response.ok) {
-          throw new Error('Backend health check failed')
-        }
-        console.log('ADK backend is healthy')
-      } catch (error) {
-        console.error('Backend health check failed:', error)
-        setMessage("Backend server is not available. Please start the backend.")
-      }
-    }
-    
-    checkBackendHealth()
+    fetch(OPENAI_API_URL, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${OPENAI_API_KEY}`,
+      },
+      body: JSON.stringify({
+        session: {
+          type: "realtime",
+          model: "gpt-realtime",
+        },
+      }),
+    })
+      .then((res) => res.json())
+      .then((data) => {
+        setClientSecret(data.value)
+      })
+      .catch((err) => {
+        console.error(err)
+        setMessage("Failed to initialize session. Please try again.")
+      })
   }, [])
 
   const handleConnect = async () => {
@@ -758,9 +773,7 @@ function App() {
           <div
             className={`video-call-container ${
               isConnected ? "connected" : ""
-            } ${
-              isPushToTalkActive ? "ptt-active" : ""
-            } ${
+            } ${isPushToTalkActive ? "ptt-active" : ""} ${
               isMicrophoneMuted ? "ptt-muted" : ""
             }`}
           >
@@ -859,14 +872,15 @@ function App() {
               {/* Push-to-Talk Controls */}
               {isConnected && (
                 <>
-
                   <button
                     className={`call-button mic-button ${
                       isPushToTalkActive ? "active" : "muted"
                     }`}
                     onClick={undefined}
                     disabled={true}
-                    title={`Hold ${pushToTalkKey === 'Space' ? 'Spacebar' : pushToTalkKey} to talk`}
+                    title={`Hold ${
+                      pushToTalkKey === "Space" ? "Spacebar" : pushToTalkKey
+                    } to talk`}
                   >
                     {isPushToTalkActive ? (
                       <svg
