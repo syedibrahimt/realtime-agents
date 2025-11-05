@@ -10,8 +10,10 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@carbon/icons-react": "^11.70.0",
     "@openai/agents": "^0.2.1",
     "@openai/agents-realtime": "^0.0.10",
+    "@rive-app/react-canvas": "^4.23.4",
     "react": "^19.1.0",
     "react-dom": "^19.1.0"
   },

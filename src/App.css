@@ -504,7 +504,7 @@ body {
   right: 0;
   height: 100vh;
   width: 25%;
-  background-color: rgba(18, 24, 38, 0.85);
+  background-color: rgba(255, 255, 255, 0.85);
   backdrop-filter: blur(15px);
   border-left: 1px solid rgba(255, 255, 255, 0.1);
   transform: translateX(100%);
@@ -526,7 +526,6 @@ body {
 
 .notes-header {
   padding: 20px;
-  background-color: rgba(26, 26, 38, 0.9);
   border-bottom: 1px solid rgba(255, 255, 255, 0.1);
   position: relative;
   flex-shrink: 0;
@@ -536,7 +535,7 @@ body {
   margin: 0 0 8px 0;
   font-size: 18px;
   font-weight: 600;
-  color: #fff;
+  color: #000;
   text-shadow: 0 0 10px rgba(100, 200, 255, 0.5);
 }
 
@@ -823,7 +822,8 @@ body {
 }
 
 @keyframes micActive {
-  0%, 100% {
+  0%,
+  100% {
     box-shadow: 0 0 20px rgba(34, 197, 94, 0.3);
   }
   50% {
@@ -856,12 +856,12 @@ body {
     flex-wrap: wrap;
     gap: 12px;
   }
-  
+
   .call-button {
     font-size: 14px;
     padding: 10px 16px;
   }
-  
+
   .mic-button {
     min-width: 100px;
   }

@@ -1,265 +1,10 @@
 import { useState, useEffect, useRef, useCallback } from "react"
-import { RealtimeSession } from "@openai/agents-realtime"
+import { RealtimeSession } from "@openai/agents/realtime"
 import "./App.css"
 import "./visualFeedback.css"
 import { aiTutoring } from "./agents/tutor"
 import mathData from "../hard4.json" // Updated to use hard3.json
 import { OPENAI_API_KEY, OPENAI_API_URL } from "../env"
-
-// Star background component with animation controlled by isConnected
-const StarBackground = ({ isConnected }) => {
-  const [stars, setStars] = useState([])
-  const [nebulas, setNebulas] = useState([])
-  const canvasRef = useRef(null)
-
-  // Generate random stars and nebulas
-  useEffect(() => {
-    const generateStars = () => {
-      const canvasWidth = window.innerWidth
-      const canvasHeight = window.innerHeight
-      const starCount = Math.floor((canvasWidth * canvasHeight) / 800) // Higher density
-
-      // Generate stars
-      const newStars = []
-      for (let i = 0; i < starCount; i++) {
-        // Create different types of stars with varied characteristics
-        const isBright = Math.random() < 0.05 // 5% chance of being a bright star
-        newStars.push({
-          x: Math.random() * canvasWidth,
-          y: Math.random() * canvasHeight,
-          size: isBright ? Math.random() * 2 + 1.5 : Math.random() * 1.2 + 0.3, // Varied sizes
-          opacity: isBright
-            ? Math.random() * 0.3 + 0.7
-            : Math.random() * 0.7 + 0.1, // Varied opacity
-          pulse: Math.random() * 2, // For pulsing animation
-          speed: Math.random() * 0.05, // For rotation speed
-          color: isBright ? getRandomStarColor() : "rgb(255, 255, 255)", // Colored for bright stars
-        })
-      }
-
-      // Generate nebula clouds
-      const nebulaCount = 3 + Math.floor(Math.random() * 3) // 3-5 nebulas
-      const newNebulas = []
-      for (let i = 0; i < nebulaCount; i++) {
-        newNebulas.push({
-          x: Math.random() * canvasWidth,
-          y: Math.random() * canvasHeight,
-          width: Math.random() * 300 + 200, // Width between 200-500
-          height: Math.random() * 200 + 100, // Height between 100-300
-          opacity: Math.random() * 0.1 + 0.05, // Very subtle
-          color: getRandomNebulaColor(),
-          speed: Math.random() * 0.01, // Slower than stars
-        })
-      }
-
-      setStars(newStars)
-      setNebulas(newNebulas)
-    }
-
-    // Helper function to generate random star colors (mostly blue/white with some red/yellow)
-    const getRandomStarColor = () => {
-      const colorTypes = [
-        "rgb(200, 220, 255)", // Blue-white
-        "rgb(255, 255, 240)", // Warm white
-        "rgb(255, 220, 180)", // Yellow
-        "rgb(255, 180, 180)", // Red
-      ]
-      return colorTypes[Math.floor(Math.random() * colorTypes.length)]
-    }
-
-    // Helper function to generate random nebula colors
-    const getRandomNebulaColor = () => {
-      const colorTypes = [
-        "rgb(40, 60, 120)", // Blue
-        "rgb(80, 40, 120)", // Purple
-        "rgb(120, 40, 80)", // Magenta
-        "rgb(120, 40, 40)", // Red
-      ]
-      return colorTypes[Math.floor(Math.random() * colorTypes.length)]
-    }
-
-    generateStars()
-
-    // Regenerate stars when window is resized
-    window.addEventListener("resize", generateStars)
-    return () => window.removeEventListener("resize", generateStars)
-  }, [])
-
-  // Animation loop
-  useEffect(() => {
-    if (!canvasRef.current) return
-
-    const canvas = canvasRef.current
-    const ctx = canvas.getContext("2d")
-    let animationId
-    let angle = 0
-
-    // Make the animation speed significantly faster when connected
-    const animationSpeed = isConnected ? 0.01 : 0.0005
-
-    const animate = () => {
-      // Set canvas size
-      canvas.width = window.innerWidth
-      canvas.height = window.innerHeight
-
-      // Clear canvas
-      ctx.clearRect(0, 0, canvas.width, canvas.height)
-
-      // Draw nebulas first (they're in the background)
-      nebulas.forEach((nebula) => {
-        let x = nebula.x
-        let y = nebula.y
-
-        // Apply slow rotation to nebulas if connected
-        if (isConnected) {
-          const centerX = canvas.width / 2
-          const centerY = canvas.height / 2
-
-          const dx = x - centerX
-          const dy = y - centerY
-
-          // Enhanced rotation for nebulas when connected
-          const rotationAngle = angle * nebula.speed * 0.6
-
-          x =
-            centerX +
-            dx * Math.cos(rotationAngle) -
-            dy * Math.sin(rotationAngle)
-          y =
-            centerY +
-            dx * Math.sin(rotationAngle) +
-            dy * Math.cos(rotationAngle)
-        }
-
-        // Create gradient for nebula
-        const gradient = ctx.createRadialGradient(
-          x,
-          y,
-          0,
-          x,
-          y,
-          Math.max(nebula.width, nebula.height) / 2
-        )
-
-        // Set gradient colors
-        const opacityMultiplier = isConnected ? 2 : 1
-        const pulseEffect = isConnected
-          ? 0.3 * Math.sin(angle * 0.5)
-          : 0.2 * Math.sin(angle * 0.5)
-        gradient.addColorStop(
-          0,
-          `rgba(${nebula.color.slice(4, -1)}, ${
-            nebula.opacity * opacityMultiplier * (1 + pulseEffect)
-          })`
-        )
-        gradient.addColorStop(1, "rgba(0, 0, 0, 0)")
-
-        // Draw nebula
-        ctx.save()
-        ctx.translate(x, y)
-        const nebulaRotation = isConnected ? angle * 0.1 : angle * 0.05 // Enhanced rotation when connected
-        ctx.rotate(nebulaRotation)
-        ctx.scale(1, nebula.height / nebula.width)
-
-        ctx.beginPath()
-        ctx.arc(0, 0, nebula.width / 2, 0, 2 * Math.PI)
-        ctx.fillStyle = gradient
-        ctx.fill()
-
-        ctx.restore()
-      })
-
-      // Draw and animate stars
-      stars.forEach((star) => {
-        let x = star.x
-        let y = star.y
-
-        // Apply rotation and ripple effects if connected
-        if (isConnected) {
-          // Center of rotation
-          const centerX = canvas.width / 2
-          const centerY = canvas.height / 2
-
-          // Distance from center
-          const dx = x - centerX
-          const dy = y - centerY
-          const distance = Math.sqrt(dx * dx + dy * dy)
-
-          // Slow rotation effect - enhanced when connected
-          const rotationSpeed =
-            star.speed *
-            (1 - distance / Math.max(canvas.width, canvas.height)) *
-            (isConnected ? 6 : 1)
-          const currentAngle = angle * rotationSpeed
-
-          // Apply rotation
-          const rotatedX =
-            centerX + dx * Math.cos(currentAngle) - dy * Math.sin(currentAngle)
-          const rotatedY =
-            centerY + dx * Math.sin(currentAngle) + dy * Math.cos(currentAngle)
-
-          // Add ripple effect - enhanced when connected
-          const ripplePhase = distance / 40 + angle / 3
-          const rippleAmplitude = isConnected ? 3 : 0
-          const ripple = rippleAmplitude * Math.sin(ripplePhase)
-
-          x = rotatedX + (ripple * dx) / (distance || 1) // Avoid division by zero
-          y = rotatedY + (ripple * dy) / (distance || 1)
-        }
-
-        // Pulsating opacity effect - enhanced when connected
-        const pulseIntensity = isConnected ? 0.5 : 0.3
-        const pulsingOpacity =
-          star.opacity *
-          (0.7 + pulseIntensity * Math.sin(angle * 2 + star.pulse))
-
-        // Draw star
-        ctx.beginPath()
-        ctx.arc(x, y, star.size, 0, 2 * Math.PI)
-        ctx.fillStyle = star.color
-          ? `rgba(${star.color.slice(4, -1)}, ${pulsingOpacity})`
-          : `rgba(255, 255, 255, ${pulsingOpacity})`
-        ctx.fill()
-
-        // Draw occasional glow for larger stars
-        if (star.size > 1.2) {
-          ctx.beginPath()
-          const glowSize = isConnected ? star.size * 3 : star.size * 2
-          ctx.arc(x, y, glowSize, 0, 2 * Math.PI)
-
-          // Create colored glow based on star color
-          const glowColor = star.color
-            ? star.color.slice(4, -1)
-            : "100, 200, 255"
-          const glowOpacity = isConnected
-            ? pulsingOpacity * 0.25
-            : pulsingOpacity * 0.15
-          ctx.fillStyle = `rgba(${glowColor}, ${glowOpacity})`
-          ctx.fill()
-        }
-      })
-
-      // Increment angle for animations - faster when connected
-      angle += animationSpeed
-
-      // Continue animation loop
-      animationId = requestAnimationFrame(animate)
-    }
-
-    animate()
-
-    return () => {
-      cancelAnimationFrame(animationId)
-    }
-  }, [stars, nebulas, isConnected])
-
-  return (
-    <canvas
-      ref={canvasRef}
-      className={`star-background ${isConnected ? "active" : ""}`}
-    />
-  )
-}
 
 // Visual Feedback Component
 const VisualFeedback = ({ feedback }) => {
@@ -342,13 +87,8 @@ const NotesArea = ({ isVisible = false, completedSteps = [] }) => {
     <div className={`notes-area ${isVisible ? "visible" : "hidden"}`}>
       <div className="notes-header">
         <div className="notes-title">
+          <h3>Notes</h3>
           <h3>{mathData.title}</h3>
-          <p className="original-problem">{mathData.problem}</p>
-        </div>
-        <div className="progress-indicator">
-          <span className="progress-text">
-            Progress: {completedSteps.length} / {mathData.steps.length} steps
-          </span>
         </div>
       </div>
 
@@ -727,41 +467,8 @@ function App() {
     }
   }
 
-  // Show error state if session failed to initialize
-  if (sessionError) {
-    return (
-      <div className="app-container">
-        <StarBackground isConnected={false} />
-        <div className="main-layout">
-          <div className="content-area">
-            <div className="video-call-container">
-              <div className="video-call-header">
-                <div className="header-content">
-                  <h1>Session Error</h1>
-                  <p className="status-message">
-                    Failed to initialize: {sessionError}
-                  </p>
-                </div>
-              </div>
-              <div className="video-frame">
-                <div className="ai-avatar">
-                  <div className="avatar-inactive">
-                    <span className="avatar-initial">⚠️</span>
-                  </div>
-                  <p className="avatar-name">Error</p>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-    )
-  }
-
   return (
     <div className="app-container">
-      <StarBackground isConnected={isConnected} />
-
       <div className={`main-layout ${notesVisible ? "notes-open" : ""}`}>
         <div className="content-area">
           <div
@@ -772,26 +479,20 @@ function App() {
             }`}
           >
             <div className="video-call-header">
-              <div className="header-content">
-                <h1>AI Tutoring Session</h1>
-                <p className="status-message">{message}</p>
-              </div>
+              {sessionError ? (
+                <div className="header-content">
+                  <h1>Session Error</h1>
+                  <p className="status-message">
+                    Failed to initialize: {sessionError}
+                  </p>
+                </div>
+              ) : (
+                <div className="header-content">
+                  <h1>AI Tutoring Session</h1>
+                  <p className="status-message">{message}</p>
+                </div>
+              )}
               <div className="header-controls">
-                <button
-                  className="notes-toggle-main"
-                  onClick={() => setNotesVisible(!notesVisible)}
-                  title={notesVisible ? "Hide Notes" : "Show Notes"}
-                >
-                  <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    viewBox="0 0 24 24"
-                    fill="currentColor"
-                  >
-                    <path d="M14,2H6A2,2 0 0,0 4,4V20A2,2 0 0,0 6,22H18A2,2 0 0,0 20,20V8L14,2M18,20H6V4H13V9H18V20Z" />
-                  </svg>
-                  Notes
-                </button>
-
                 {isConnected && (
                   <div className="timer">
                     <span className="timer-dot"></span>
@@ -897,6 +598,21 @@ function App() {
                   </button>
                 </>
               )}
+
+              <button
+                className="notes-toggle-main"
+                onClick={() => setNotesVisible(!notesVisible)}
+                title={notesVisible ? "Hide Notes" : "Show Notes"}
+              >
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  viewBox="0 0 24 24"
+                  fill="currentColor"
+                >
+                  <path d="M14,2H6A2,2 0 0,0 4,4V20A2,2 0 0,0 6,22H18A2,2 0 0,0 20,20V8L14,2M18,20H6V4H13V9H18V20Z" />
+                </svg>
+                Notes
+              </button>
             </div>
           </div>
         </div>
