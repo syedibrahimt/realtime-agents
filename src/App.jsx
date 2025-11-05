@@ -1,19 +1,43 @@
-import { useState, useEffect, useRef, useCallback } from "react"
-import { RealtimeSession } from "@openai/agents/realtime"
-import "./App.css"
-import "./visualFeedback.css"
-import { aiTutoring } from "./agents/tutor"
-import mathData from "../hard4.json" // Updated to use hard3.json
-import { OPENAI_API_KEY, OPENAI_API_URL } from "../env"
+import { useState, useEffect, useRef, useCallback } from "react";
+import { RealtimeSession } from "@openai/agents/realtime";
+import "./App.css";
+import "./visualFeedback.css";
+import { aiTutoring } from "./agents/tutor";
+import mathData from "../hard4.json"; // Updated to use hard3.json
+import { OPENAI_API_KEY, OPENAI_API_URL } from "../env";
+import logoImage from "./assets/knomAI_white.png";
+import {
+  Time,
+  MicrophoneFilled,
+  Minimize,
+  PhoneFilled,
+} from "@carbon/icons-react";
+import smart_tutor_logo_white from "./assets/knomAI_white.png";
+
+import meet_microphone from "./assets/meet_microphone.png";
+import meet_camera from "./assets/meet_camera.png";
+import meet_smile from "./assets/meet_smile.png";
+import meet_raise_hand from "./assets/meet_raise_hand.png";
+import meet_notes from "./assets/meet_notes.png";
+import meet_call_end from "./assets/meet_call_end.png";
+import meet_hand from "./assets/meet_hand.png";
+import { motion } from "framer-motion";
+
+import { useRive, useStateMachineInput } from "@rive-app/react-canvas";
+
+import demo from "../hard4.json"
+
+const STATE_MACHINE_NAME = "State Machine 1";
+const INPUT_NAME = "Input";
 
 // Visual Feedback Component
 const VisualFeedback = ({ feedback }) => {
-  if (!feedback) return null
+  if (!feedback) return null;
 
-  const { type, content, label, explanation, contentType } = feedback
+  const { type, content, label, explanation, contentType } = feedback;
 
   // Check if content is just an emoji
-  const isEmojiOnly = /^[\p{Emoji}\s]+$/u.test(content)
+  const isEmojiOnly = /^[\p{Emoji}\s]+$/u.test(content);
 
   // If this is an intro type
   if (type === "intro") {
@@ -35,7 +59,7 @@ const VisualFeedback = ({ feedback }) => {
         <div className="intro-explanation">{explanation}</div>
         {label && <div className="feedback-label">{label}</div>}
       </div>
-    )
+    );
   }
 
   // Regular feedback types
@@ -50,12 +74,12 @@ const VisualFeedback = ({ feedback }) => {
       </div>
       {label && <div className="feedback-label">{label}</div>}
     </div>
-  )
-} // Notes Area Component
+  );
+}; // Notes Area Component
 const NotesArea = ({ isVisible = false, completedSteps = [] }) => {
   // Validate props
   if (!mathData || !mathData.steps || !Array.isArray(mathData.steps)) {
-    console.error("Invalid mathData structure")
+    console.error("Invalid mathData structure");
     return (
       <div className={`notes-area ${isVisible ? "visible" : "hidden"}`}>
         <div className="notes-header">
@@ -65,7 +89,7 @@ const NotesArea = ({ isVisible = false, completedSteps = [] }) => {
           </div>
         </div>
       </div>
-    )
+    );
   }
 
   // Check if step is completed
@@ -73,15 +97,15 @@ const NotesArea = ({ isVisible = false, completedSteps = [] }) => {
     return (
       Array.isArray(completedSteps) &&
       completedSteps.some((step) => step.stepNumber === stepNumber)
-    )
-  }
+    );
+  };
 
   // Get completed step data
   const getCompletedStepData = (stepNumber) => {
     return Array.isArray(completedSteps)
       ? completedSteps.find((step) => step.stepNumber === stepNumber)
-      : null
-  }
+      : null;
+  };
 
   return (
     <div className={`notes-area ${isVisible ? "visible" : "hidden"}`}>
@@ -94,13 +118,13 @@ const NotesArea = ({ isVisible = false, completedSteps = [] }) => {
 
       <div className="notes-content">
         {mathData.steps.map((step, index) => {
-          const stepNumber = step.step
-          const isCompleted = isStepCompleted(stepNumber)
-          const completedData = getCompletedStepData(stepNumber)
+          const stepNumber = step.step;
+          const isCompleted = isStepCompleted(stepNumber);
+          const completedData = getCompletedStepData(stepNumber);
 
           // Only show completed steps
           if (!isCompleted) {
-            return null
+            return null;
           }
 
           return (
@@ -121,7 +145,7 @@ const NotesArea = ({ isVisible = false, completedSteps = [] }) => {
                 </div>
               </>
             </div>
-          )
+          );
         })}
 
         {completedSteps.length === 0 && (
@@ -131,24 +155,24 @@ const NotesArea = ({ isVisible = false, completedSteps = [] }) => {
         )}
       </div>
     </div>
-  )
-}
+  );
+};
 
 function App() {
   // Initialize session with error handling
-  const session = useRef(null)
-  const [sessionError, setSessionError] = useState(null)
-  const [clientSecret, setClientSecret] = useState()
-  const [isConnected, setIsConnected] = useState(false)
-  const [isLoading, setIsLoading] = useState(false)
+  const session = useRef(null);
+  const [sessionError, setSessionError] = useState(null);
+  const [clientSecret, setClientSecret] = useState();
+  const [isConnected, setIsConnected] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
   const [message, setMessage] = useState(
     "Click 'Connect' to start a tutoring session"
-  )
+  );
 
   // Push-to-talk state management (always enabled)
-  const [isMicrophoneMuted, setIsMicrophoneMuted] = useState(false)
-  const [isPushToTalkActive, setIsPushToTalkActive] = useState(false)
-  const [pushToTalkKey] = useState("Space")
+  const [isMicrophoneMuted, setIsMicrophoneMuted] = useState(false);
+  const [isPushToTalkActive, setIsPushToTalkActive] = useState(false);
+  const [pushToTalkKey] = useState("Space");
 
   // Update message for push-to-talk mode
   useEffect(() => {
@@ -157,30 +181,74 @@ function App() {
         `Connected! Hold ${
           pushToTalkKey === "Space" ? "Spacebar" : pushToTalkKey
         } to talk.`
-      )
+      );
     } else {
-      setMessage("Click 'Connect' to start a tutoring session")
+      setMessage("Click 'Connect' to start a tutoring session");
     }
-  }, [isConnected, pushToTalkKey])
-  const [notesVisible, setNotesVisible] = useState(false)
-  const [completedSteps, setCompletedSteps] = useState([])
-  const [visualFeedback, setVisualFeedback] = useState(null)
+  }, [isConnected, pushToTalkKey]);
+  const [notesVisible, setNotesVisible] = useState(true);
+  const [completedSteps, setCompletedSteps] = useState([]);
+  const [visualFeedback, setVisualFeedback] = useState(null);
+
+  //Animation variables
+  const [value, setValue] = useState(0);
+  const { rive, RiveComponent } = useRive({
+    src: "https://learnpodseditornodeserver.knomadixapp.com/backpack/knomadix_ai.riv",
+    autoplay: true,
+    stateMachines: STATE_MACHINE_NAME,
+  });
+  const input = useStateMachineInput(rive, STATE_MACHINE_NAME, INPUT_NAME);
+
+  const [smartTutorValiables, setSmartTutorValiables] = useState({
+    isMicroPhone: false,
+    isVideoOn: true,
+    isHandRaised: false,
+    isNoteOpen: true,
+    isMeetingStarted: false,
+  });
+  const [currentStepIndex, setCurrentStepIndex] = useState(4);
+
+  useEffect(() => {
+    if (input) {
+      input.value = value;
+    }
+  }, [input, value]);
+
+  //Video variables
+  const videoRef = useRef(null);
+
+  function cameraPermission() {
+    // Request access to the camera
+    navigator.mediaDevices
+      .getUserMedia({ video: true, audio: true })
+      .then((stream) => {
+        if (videoRef.current) {
+          videoRef.current.srcObject = stream;
+          // toggleSmartTutorValue("isVideoOn");
+        }
+      })
+      .catch((err) => {
+        console.error("Error accessing camera: ", err);
+      });
+  }
 
   // Initialize session
   useEffect(() => {
+    cameraPermission();
+    
     try {
       if (aiTutoring?.greeterAgent) {
         // Start with the greeter agent, which will handle the proper flow
-        session.current = new RealtimeSession(aiTutoring.brainStormerAgent)
+        session.current = new RealtimeSession(aiTutoring.brainStormerAgent);
       } else {
-        throw new Error("Greeter agent not available")
+        throw new Error("Greeter agent not available");
       }
     } catch (error) {
-      console.error("Failed to initialize session:", error)
-      setSessionError(error.message)
-      setMessage("Failed to initialize tutoring session")
+      console.error("Failed to initialize session:", error);
+      setSessionError(error.message);
+      setMessage("Failed to initialize tutoring session");
     }
-  }, [])
+  }, []);
 
   // Handle step completion from the agent
   const handleStepCompletion = useCallback(
@@ -189,7 +257,7 @@ function App() {
         `🎯 Step ${stepNumber} completed in UI:`,
         description,
         updatedExpression
-      )
+      );
 
       // Validate input parameters
       if (!stepNumber || !description || !updatedExpression) {
@@ -197,8 +265,8 @@ function App() {
           stepNumber,
           description,
           updatedExpression,
-        })
-        return
+        });
+        return;
       }
 
       // Add to completed steps if not already present
@@ -209,18 +277,18 @@ function App() {
             description,
             updatedExpression,
             completedAt: new Date().toISOString(),
-          }
+          };
           const updated = [...prev, newStep].sort(
             (a, b) => a.stepNumber - b.stepNumber
-          )
-          console.log("Updated completed steps:", updated)
-          return updated
+          );
+          console.log("Updated completed steps:", updated);
+          return updated;
         }
-        return prev
-      })
+        return prev;
+      });
     },
     []
-  ) // Empty dependency array since we're using functional updates
+  ); // Empty dependency array since we're using functional updates
 
   // Handle visual feedback from the agent
   const handleVisualFeedback = useCallback(
@@ -232,7 +300,7 @@ function App() {
         label,
         stepNumber,
         questionIndex
-      )
+      );
 
       // Validate input parameters
       if (!type || !content || !label || !stepNumber) {
@@ -242,17 +310,17 @@ function App() {
           label,
           stepNumber,
           questionIndex,
-        })
-        return
+        });
+        return;
       }
 
       // For any new feedback, clear previous feedback first
-      setVisualFeedback(null)
+      setVisualFeedback(null);
 
       // Small delay to ensure smooth transition
       setTimeout(() => {
         // Set the current visual feedback
-        const timestamp = new Date().toISOString()
+        const timestamp = new Date().toISOString();
         setVisualFeedback({
           type,
           content,
@@ -260,7 +328,7 @@ function App() {
           stepNumber,
           questionIndex,
           timestamp,
-        })
+        });
 
         // For success and hint types, automatically clear after 5 seconds
         if (type === "success" || type === "hint") {
@@ -268,20 +336,20 @@ function App() {
             setVisualFeedback((current) => {
               // Only clear if this is the same feedback that was set
               if (current && current.timestamp === timestamp) {
-                return null
+                return null;
               }
-              return current
-            })
-          }, 5000)
+              return current;
+            });
+          }, 5000);
         }
-      }, 100)
+      }, 100);
     },
     []
-  )
+  );
 
   // Handle introduction visual from the introGiver agent
   const handleIntroVisual = useCallback((content, label, explanation, type) => {
-    console.log(`🎨 Intro visual in UI:`, content, label, explanation, type)
+    console.log(`🎨 Intro visual in UI:`, content, label, explanation, type);
 
     // Validate input parameters
     if (!content || !label || !explanation) {
@@ -290,17 +358,17 @@ function App() {
         label,
         explanation,
         type,
-      })
-      return
+      });
+      return;
     }
 
     // For any new feedback, clear previous feedback first
-    setVisualFeedback(null)
+    setVisualFeedback(null);
 
     // Small delay to ensure smooth transition
     setTimeout(() => {
       // Set the current visual feedback with intro type
-      const timestamp = new Date().toISOString()
+      const timestamp = new Date().toISOString();
       setVisualFeedback({
         type: "intro",
         content,
@@ -308,26 +376,26 @@ function App() {
         explanation,
         contentType: type || "text",
         timestamp,
-      })
-    }, 100)
-  }, [])
+      });
+    }, 100);
+  }, []);
 
   // Expose handler functions globally for agents to call
   useEffect(() => {
-    window.handleStepCompletion = handleStepCompletion
-    window.handleVisualFeedback = handleVisualFeedback
-    window.handleIntroVisual = handleIntroVisual
+    window.handleStepCompletion = handleStepCompletion;
+    window.handleVisualFeedback = handleVisualFeedback;
+    window.handleIntroVisual = handleIntroVisual;
 
     return () => {
-      delete window.handleStepCompletion
-      delete window.handleVisualFeedback
-      delete window.handleIntroVisual
-    }
-  }, [handleStepCompletion, handleVisualFeedback, handleIntroVisual])
+      delete window.handleStepCompletion;
+      delete window.handleVisualFeedback;
+      delete window.handleIntroVisual;
+    };
+  }, [handleStepCompletion, handleVisualFeedback, handleIntroVisual]);
 
   // Push-to-talk keyboard event handlers
   useEffect(() => {
-    if (!isConnected) return
+    if (!isConnected) return;
 
     const handleKeyDown = (event) => {
       // Only activate if the key matches our push-to-talk key and we're not already active
@@ -336,14 +404,15 @@ function App() {
         !isPushToTalkActive &&
         !event.repeat
       ) {
-        event.preventDefault()
-        setIsPushToTalkActive(true)
+        event.preventDefault();
+        setIsPushToTalkActive(true);
+        setValue(100);
         if (session.current) {
-          session.current.mute(false)
-          setIsMicrophoneMuted(false)
+          session.current.mute(false);
+          setIsMicrophoneMuted(false);
         }
       }
-    }
+    };
 
     const handleKeyUp = (event) => {
       // Deactivate when the key is released
@@ -351,35 +420,36 @@ function App() {
         (event.code === pushToTalkKey || event.key === " ") &&
         isPushToTalkActive
       ) {
-        event.preventDefault()
-        setIsPushToTalkActive(false)
+        event.preventDefault();
+        setIsPushToTalkActive(false);
+        setValue(-100);
         if (session.current) {
-          session.current.mute(true)
-          setIsMicrophoneMuted(true)
+          session.current.mute(true);
+          setIsMicrophoneMuted(true);
         }
       }
-    }
+    };
 
     // Add event listeners to the document
-    document.addEventListener("keydown", handleKeyDown)
-    document.addEventListener("keyup", handleKeyUp)
+    document.addEventListener("keydown", handleKeyDown);
+    document.addEventListener("keyup", handleKeyUp);
 
     return () => {
-      document.removeEventListener("keydown", handleKeyDown)
-      document.removeEventListener("keyup", handleKeyUp)
-    }
-  }, [isConnected, isPushToTalkActive, pushToTalkKey])
+      document.removeEventListener("keydown", handleKeyDown);
+      document.removeEventListener("keyup", handleKeyUp);
+    };
+  }, [isConnected, isPushToTalkActive, pushToTalkKey]);
 
   // Initialize microphone state when connecting/disconnecting
   useEffect(() => {
     if (isConnected) {
       // Always start muted in push-to-talk mode
       if (session.current) {
-        session.current.mute(true)
-        setIsMicrophoneMuted(true)
+        session.current.mute(true);
+        setIsMicrophoneMuted(true);
       }
     }
-  }, [isConnected])
+  }, [isConnected]);
 
   useEffect(() => {
     fetch(OPENAI_API_URL, {
@@ -398,23 +468,23 @@ function App() {
     })
       .then((res) => res.json())
       .then((data) => {
-        setClientSecret(data.value)
+        setClientSecret(data.value);
       })
       .catch((err) => {
-        console.error(err)
-        setMessage("Failed to initialize session. Please try again.")
-      })
-  }, [])
+        console.error(err);
+        setMessage("Failed to initialize session. Please try again.");
+      });
+  }, []);
 
   const handleConnect = async () => {
-    if (!clientSecret || isConnected) return
+    if (!clientSecret || isConnected) return;
 
     try {
-      setIsLoading(true)
-      setMessage("Connecting to AI tutor...")
+      setIsLoading(true);
+      setMessage("Connecting to AI tutor...");
 
       if (!session.current) {
-        throw new Error("Session not initialized")
+        throw new Error("Session not initialized");
       }
 
       // For debugging visual feedback on initial connection
@@ -434,38 +504,326 @@ function App() {
 
       await session.current.connect({
         apiKey: clientSecret,
-      })
+      });
 
-      setIsConnected(true)
+      setIsConnected(true);
     } catch (err) {
-      console.error("Connection error:", err)
-      setMessage(`Failed to connect: ${err.message || "Unknown error"}`)
+      console.error("Connection error:", err);
+      setMessage(`Failed to connect: ${err.message || "Unknown error"}`);
     } finally {
-      setIsLoading(false)
+      setIsLoading(false);
     }
-  }
+  };
 
   const handleDisconnect = async () => {
-    if (!isConnected) return
+    if (!isConnected) return;
 
     try {
-      setIsLoading(true)
-      setMessage("Disconnecting...")
+      setIsLoading(true);
+      setMessage("Disconnecting...");
 
       if (!session.current) {
-        throw new Error("Session not found")
+        throw new Error("Session not found");
       }
 
-      await session.current.close()
+      await session.current.close();
 
-      setIsConnected(false)
+      setIsConnected(false);
     } catch (err) {
-      console.error("Disconnection error:", err)
-      setMessage(`Failed to disconnect: ${err.message || "Unknown error"}`)
+      console.error("Disconnection error:", err);
+      setMessage(`Failed to disconnect: ${err.message || "Unknown error"}`);
     } finally {
-      setIsLoading(false)
+      setIsLoading(false);
     }
+  };
+
+  const toggleSmartTutorValue = (key) => {
+    setSmartTutorValiables((prev) => ({
+      ...prev,
+      [key]: !prev[key],
+    }));
+  };
+
+  function renderSpaceBar() {
+    // const { isRecording, isProcessingAI, isPlayingAI, isConnected } = props;
+
+    // 1. Determine the button's text based on the current state
+    let buttonText = "Press & Hold Spacebar to Speak";
+    if (!isConnected) {
+      buttonText = "Connecting...";
+    } else if (isPushToTalkActive) {
+      buttonText = "Recording...";
+    }
+
+    // 2. Determine if the button should be disabled
+    // This fulfills your requirement to disable it during processing and playback
+    const isDisabled = !isConnected;
+
+    return (
+      <div style={{ position: "absolute", bottom: "2%", alignSelf: "center" }}>
+        <motion.button
+          style={{
+            borderRadius: "14px",
+            border: "2px solid #262947",
+            backgroundColor: "white",
+            color: "#1d2038",
+            cursor: isDisabled ? "not-allowed" : "pointer",
+            // 3. Add opacity to show the disabled "fade" state
+            opacity: isDisabled ? 0.6 : 1,
+          }}
+          // 4. Pass the 'disabled' attribute to the button
+          disabled={isDisabled}
+          // 5. Your animation now correctly uses the 'isRecording' state
+          animate={{ scale: isPushToTalkActive ? 0.95 : 1 }}
+          transition={{ type: "spring", stiffness: 300, damping: 20 }}
+        >
+          {/* <Mic className="w-5 h-5" /> */}
+          {buttonText}
+        </motion.button>
+      </div>
+    );
   }
+
+  function renderUserCamera() {
+    return (
+      <div className="meet-camera-cont meet-user-video">
+        <div className="meet-video-area">
+          <video
+            className="video-style"
+            ref={videoRef}
+            autoPlay
+            playsInline
+            muted
+          />
+          <div className="on-video-icon">
+            <Minimize className="on-video-minim" />
+          </div>
+          {/* {smartTutorValiables.isHandRaised && (
+            <div className="on-video-hand-cont">
+              <img className="meet-hand-style" src={Images.meet_hand} />
+            </div>
+          )} */}
+        </div>
+      </div>
+    );
+  }
+
+  function renderAICamera() {
+    return (
+      <div className="meet-camera-cont meet-ai-video">
+        <div className="meet-video-area">
+          <div className="ai-style">
+            {isLoading ? (
+              <p className="loading-text">
+                Connecting<span className="dots"></span>
+              </p>
+            ) : isConnected ? (
+              <RiveComponent
+                style={{
+                  width: 200,
+                  height: 200,
+                }}
+              />
+            ) : null}
+          </div>
+
+          <div className="on-video-icon">
+            <Minimize className="on-video-minim" />
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+    // main render function for notes/steps
+  function renderNoteSteps() {
+    const stepsCopy = demo.steps;
+console.log("stepsCopy",stepsCopy)
+    return (
+      <div className="steps-area">
+        {/* <div className="notes-stpes-cont">
+          {currentStepIndex === 1 ? (
+            <p
+              className="notes-updated-exp"
+              dangerouslySetInnerHTML={{ __html: highlightedTextQues }}
+            />
+          ) : (
+            <p className="notes-updated-exp">{demo.problem}</p>
+          )}
+        </div> */}
+
+        {(() => {
+          const completedSteps =
+            stepsCopy && stepsCopy.length > 0
+              ? stepsCopy.slice(0, Math.max(0, currentStepIndex))
+              : [];
+
+          if (completedSteps.length === 0) return <span />;
+
+          return completedSteps.map((step, idx) => {
+            // Prepare safe strings for Description and UpdatedExpression
+            const description = step.Notes.Description;
+            const updatedExpression =step.Notes.UpdatedExpression;
+
+            // determine display mode:
+            // - If this is the current step being worked on, show TypingText for UpdatedExpression
+            // - If this is the immediate previous step (idx === currentStepIndex - 2), show highlighted HTML
+            // - Otherwise show plain text
+            const isCurrentWorkingStep = currentStepIndex - 1 === idx;
+            const isImmediatePrevious = currentStepIndex - 2 === idx;
+
+            return (
+              <div className="notes-stpes-cont" key={idx}>
+                {/* 1) ALWAYS show Description first (notes before updated expression) */}
+                {/* <p
+                className="notes-updated-exp"
+                // If you want the Description to allow highlights too, you can use renderHighLightTextForStep
+                // For now we place it as plain text. If you prefer HTML highlights inside description,
+                // replace the next line with dangerouslySetInnerHTML and call renderHighLightTextForStep(description, idx)
+              >
+                {description}
+              </p> */}
+
+                <p
+                  className="notes-updated-exp"
+                  
+                > {description}</p>
+                <p className="notes-updated-exp">{updatedExpression}</p>
+
+                {/* 2) Show UpdatedExpression in the appropriate form */}
+                {/* {isCurrentWorkingStep ? (
+                  // TypingText expects a string
+                  <TypingTe text={updatedExpression} speed={80} />
+                ) : isImmediatePrevious ? (
+                  // highlighted HTML for the immediate previous step (uses the step index)
+                  <p
+                    className="notes-updated-exp"
+                    dangerouslySetInnerHTML={{
+                      __html: renderHighLightTextForStep(
+                        updatedExpression,
+                        idx
+                      ),
+                    }}
+                  />
+                ) : (
+                  // normal plain text for older steps
+                  <p className="notes-updated-exp">{updatedExpression}</p>
+                )} */}
+              </div>
+            );
+          });
+        })()}
+      </div>
+    );
+  }
+
+  return (
+    <div className="tutor-main-cont">
+      <div
+        className={
+          notesVisible
+            ? "meeting-area-cont"
+            : "meeting-area-cont expand-meeting"
+        }
+      >
+        <div className="meeting-canvas-main-cont">
+          {/* Header UI */}
+          <div className="meeting-header-cont">
+            <div className="header-title-label-cont">
+              <div className="smart-tutor-logo-cont">
+                <img
+                  className="smart-tut-logo"
+                  src={smart_tutor_logo_white}
+                ></img>
+              </div>
+              <span className="smart-tut-label-divider"></span>
+              <p className="smart-tut-label">
+                {"meeting with Knova about the States of matter"}
+              </p>
+            </div>
+            {/* <div className="header-title-timer-cont">
+              <Time className="meet-timer-logo" />
+              <p className="meet-timer-label">{getTimeSpent}</p>
+            </div> */}
+          </div>
+          <div className="meeting-canvas-cont">
+            {/* {Object.keys(smartTutorCompData).length > 0 && renderCompData()} */}
+          </div>
+          {renderUserCamera()}
+          {renderAICamera()}
+          {isConnected&&renderSpaceBar()}
+        </div>
+        <div className="meeting-settings-cont">
+          <div className="media-icons-cont">
+            <div
+              className="meet-set-icon"
+              onClick={() => toggleSmartTutorValue("isMicroPhone")}
+            >
+              <img className="meet-icon-style" src={meet_microphone} />
+            </div>
+            <div
+              className="meet-set-icon"
+              onClick={() => toggleSmartTutorValue("isVideoOn")}
+            >
+              <img className="meet-icon-style" src={meet_camera} />
+            </div>
+          </div>
+          <div className="meeting-set-icons-cont">
+            <div className="meet-set-icon">
+              <img className="meet-icon-style" src={meet_smile} />
+            </div>
+            <div
+              className="meet-set-icon"
+              onClick={() => toggleSmartTutorValue("isHandRaised")}
+            >
+              <img className="meet-icon-style" src={meet_raise_hand} />
+            </div>
+            <div
+              className="meet-set-icon"
+              onClick={() => toggleSmartTutorValue("isNoteOpen")}
+            >
+              <img className="meet-icon-style" src={meet_notes} />
+            </div>
+          </div>
+          <div className="meet-cancel-icon-cont">
+            <div
+              className={
+                smartTutorValiables.isMeetingStarted
+                  ? "meet-set-icon meet-end-icon"
+                  : "meet-set-icon meet-start-icon"
+              }
+              onClick={() => {
+                if (smartTutorValiables.isMeetingStarted) {
+                  toggleSmartTutorValue("isMeetingStarted");
+                  handleDisconnect();
+                  setValue(0);
+                } else {
+                  toggleSmartTutorValue("isMeetingStarted");
+                  handleConnect();
+                }
+              }}
+            >
+              {isConnected ? (
+                <img className="meet-icon-style" src={meet_call_end} />
+              ) : (
+                <PhoneFilled className="meet-start-icon-style" />
+              )}
+            </div>
+          </div>
+        </div>
+      </div>
+      <div
+        className={
+          notesVisible ? "notes-area-cont minimize-meeting" : "notes-area-cont"
+        }
+      >
+        <div className="notes-heading-cont">
+          <p className="notes-head-label">Notes</p>
+        </div>
+        {renderNoteSteps()}
+      </div>
+    </div>
+  );
 
   return (
     <div className="app-container">
@@ -620,7 +978,7 @@ function App() {
         <NotesArea isVisible={notesVisible} completedSteps={completedSteps} />
       </div>
     </div>
-  )
+  );
 }
 
-export default App
+export default App;
