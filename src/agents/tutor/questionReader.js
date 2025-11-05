@@ -1,4 +1,4 @@
-import { RealtimeAgent } from "@openai/agents-realtime"
+import { RealtimeAgent } from "@openai/agents/realtime"
 import problemData from "../../../hard4.json"
 // import { stepTutorAgent } from "./stepTutor"
 import { brainStormerAgent } from "./brainStormer"
