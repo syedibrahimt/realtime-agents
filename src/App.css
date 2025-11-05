@@ -1293,6 +1293,7 @@ body {
   font-weight: 400;
   line-height: 150%; /* 24px */
   margin: 0px !important;
+  text-align: left;
 }
 
 .cursor {

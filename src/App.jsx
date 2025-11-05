@@ -25,7 +25,7 @@ import { motion } from "framer-motion";
 
 import { useRive, useStateMachineInput } from "@rive-app/react-canvas";
 
-import demo from "../hard4.json"
+import demo from "../hard4.json";
 
 const STATE_MACHINE_NAME = "State Machine 1";
 const INPUT_NAME = "Input";
@@ -199,6 +199,7 @@ function App() {
   });
   const input = useStateMachineInput(rive, STATE_MACHINE_NAME, INPUT_NAME);
 
+  const streamRef = useRef(null); // Store the stream
   const [smartTutorValiables, setSmartTutorValiables] = useState({
     isMicroPhone: false,
     isVideoOn: true,
@@ -235,7 +236,7 @@ function App() {
   // Initialize session
   useEffect(() => {
     cameraPermission();
-    
+
     try {
       if (aiTutoring?.greeterAgent) {
         // Start with the greeter agent, which will handle the proper flow
@@ -537,6 +538,127 @@ function App() {
     }
   };
 
+  // const updateCurrentIndex = (text) => {
+  //   const stepMatch = text.match(/Step\s+(\d+)/i); // matches "Step 1", "Step  2", etc.
+  //   if (!stepMatch) return;
+
+  //   const stepNum = parseInt(stepMatch[1], 10);
+
+  //   if (text.toLowerCase().includes("let's work on step")) {
+  //     setCurrentStepIndex(stepNum === 1 ? 0 : stepNum - 1);
+  //   } else if (
+  //     text.toLowerCase().includes("step") &&
+  //     text.toLowerCase().includes("completed")
+  //   ) {
+  //     setCurrentStepIndex(stepNum);
+  //   }
+  // };
+
+  // const updateCurrentIndex = (text) => {
+  //   const stepMatch = text.match(/Step(\d+)/);
+  //   if (!stepMatch) return;
+
+  //   const stepNum = parseInt(stepMatch[1], 10);
+  //   if (text.toLowerCase().includes("let's work on step")) {
+  //     setCurrentStepIndex(stepNum === 1 ? 0 : stepNum - 1);
+  //   } else if (
+  //     text.toLowerCase().includes("step") &&
+  //     text.toLowerCase().includes("completed")
+  //   ) {
+  //     console.log("from transcript");
+  //     setCurrentStepIndex(stepNum); // Proceed to the next step
+  //   }
+  // };
+
+  // useEffect(() => {
+  //   if (dataChannel) {
+  //     dataChannel.addEventListener("message", (e) => {
+  //       const event = JSON.parse(e.data);
+
+  //     });
+  //   }
+  // }, [dataChannel]);
+
+  // useEffect(() => {
+  //   if (audioOver) {
+  //     const stepMatch = phrase.toLowerCase().match(/step\s*(\d+)/);
+  //     if (stepMatch) {
+  //       setCurrentStepIndex(parseInt(stepMatch[1], 10));
+  //     } else if (phrase.toLowerCase().includes("successfully")) {
+  //       const stepsCopy = JSON.parse(demo.steps);
+  //       setCurrentStepIndex(stepsCopy.length + 1);
+  //     }
+  //   }
+  // }, [audioOver]);
+
+  //Smart video features
+  useEffect(() => {
+    if (smartTutorValiables.isVideoOn) {
+      // Start the video
+      navigator.mediaDevices
+        .getUserMedia({ video: true, audio: true })
+        .then((stream) => {
+          streamRef.current = stream;
+          if (videoRef.current) {
+            videoRef.current.srcObject = stream;
+          }
+        })
+        .catch((err) => {
+          console.error("Error accessing camera: ", err);
+        });
+    } else {
+      // Stop the video
+      if (streamRef.current) {
+        streamRef.current.getTracks().forEach((track) => track.stop());
+        streamRef.current = null;
+      }
+      if (videoRef.current) {
+        videoRef.current.srcObject = null;
+      }
+    }
+  }, [smartTutorValiables.isVideoOn]);
+
+  useEffect(() => {
+    const startCamera = async () => {
+      try {
+        const stream = await navigator.mediaDevices.getUserMedia({
+          video: true,
+          audio: true,
+        });
+        streamRef.current = stream;
+        if (videoRef.current) {
+          videoRef.current.srcObject = stream;
+        }
+      } catch (error) {
+        console.error("Error accessing camera:", error);
+      }
+    };
+
+    const stopCamera = () => {
+      if (streamRef.current) {
+        streamRef.current.getTracks().forEach((track) => {
+          track.stop();
+        });
+        streamRef.current = null;
+      }
+
+      if (videoRef.current) {
+        videoRef.current.srcObject = null;
+      }
+    };
+
+    if (smartTutorValiables.isVideoOn) {
+      startCamera();
+    } else {
+      stopCamera();
+    }
+
+    // Cleanup on unmount
+    return () => {
+      stopCamera();
+    };
+  }, [smartTutorValiables.isVideoOn]);
+
   const toggleSmartTutorValue = (key) => {
     setSmartTutorValiables((prev) => ({
       ...prev,
@@ -635,10 +757,10 @@ function App() {
     );
   }
 
-    // main render function for notes/steps
+  // main render function for notes/steps
   function renderNoteSteps() {
     const stepsCopy = demo.steps;
-console.log("stepsCopy",stepsCopy)
+    console.log("stepsCopy", stepsCopy);
     return (
       <div className="steps-area">
         {/* <div className="notes-stpes-cont">
@@ -663,7 +785,7 @@ console.log("stepsCopy",stepsCopy)
           return completedSteps.map((step, idx) => {
             // Prepare safe strings for Description and UpdatedExpression
             const description = step.Notes.Description;
-            const updatedExpression =step.Notes.UpdatedExpression;
+            const updatedExpression = step.Notes.UpdatedExpression;
 
             // determine display mode:
             // - If this is the current step being worked on, show TypingText for UpdatedExpression
@@ -684,10 +806,7 @@ console.log("stepsCopy",stepsCopy)
                 {description}
               </p> */}
 
-                <p
-                  className="notes-updated-exp"
-                  
-                > {description}</p>
+                <p className="notes-updated-exp"> {description}</p>
                 <p className="notes-updated-exp">{updatedExpression}</p>
 
                 {/* 2) Show UpdatedExpression in the appropriate form */}
@@ -751,7 +870,7 @@ console.log("stepsCopy",stepsCopy)
           </div>
           {renderUserCamera()}
           {renderAICamera()}
-          {isConnected&&renderSpaceBar()}
+          {isConnected && renderSpaceBar()}
         </div>
         <div className="meeting-settings-cont">
           <div className="media-icons-cont">
