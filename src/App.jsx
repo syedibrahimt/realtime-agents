@@ -760,7 +760,6 @@ function App() {
   // main render function for notes/steps
   function renderNoteSteps() {
     const stepsCopy = demo.steps;
-    console.log("stepsCopy", stepsCopy);
     return (
       <div className="steps-area">
         {/* <div className="notes-stpes-cont">
