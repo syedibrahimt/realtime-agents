@@ -39,6 +39,16 @@ const VisualFeedback = ({ feedback }) => {
   // Check if content is just an emoji
   const isEmojiOnly = /^[\p{Emoji}\s]+$/u.test(content);
 
+  // If this is a question type (main problem with options)
+  if (type === "question") {
+    return (
+      <div className={`visual-feedback ${type}`}>
+        <div className="feedback-content">{content}</div>
+        {/* {label && <div className="feedback-label">{label}</div>} */}
+      </div>
+    );
+  }
+
   // If this is an intro type
   if (type === "intro") {
     return (
@@ -207,7 +217,7 @@ function App() {
     isNoteOpen: true,
     isMeetingStarted: false,
   });
-  const [currentStepIndex, setCurrentStepIndex] = useState(4);
+  const [currentStepIndex, setCurrentStepIndex] = useState(0);
 
   useEffect(() => {
     if (input) {
@@ -293,23 +303,23 @@ function App() {
 
   // Handle visual feedback from the agent
   const handleVisualFeedback = useCallback(
-    (type, content, label, stepNumber, questionIndex) => {
+    (type, content, label, stepIndex, questionIndex) => {
       console.log(
         `🎨 Visual feedback in UI:`,
         type,
         content,
         label,
-        stepNumber,
+        stepIndex,
         questionIndex
       );
 
       // Validate input parameters
-      if (!type || !content || !label || !stepNumber) {
+      if (!type || !content || !label) {
         console.error("Invalid visual feedback data:", {
           type,
           content,
           label,
-          stepNumber,
+          stepIndex,
           questionIndex,
         });
         return;
@@ -322,11 +332,15 @@ function App() {
       setTimeout(() => {
         // Set the current visual feedback
         const timestamp = new Date().toISOString();
+
+        // Map 'before' type to 'illustration' for CSS styling
+        const displayType = type === "before" ? "illustration" : type;
+
         setVisualFeedback({
-          type,
+          type: displayType,
           content,
           label,
-          stepNumber,
+          stepIndex,
           questionIndex,
           timestamp,
         });
@@ -381,18 +395,41 @@ function App() {
     }, 100);
   }, []);
 
+  // Handle step index updates from the agent
+  const handleUpdateStepIndex = useCallback((stepIndex, action) => {
+    console.log(`📊 Update step index in UI:`, stepIndex, action);
+
+    // Validate input
+    if (typeof stepIndex !== "number" || stepIndex < 0 || stepIndex > 3) {
+      console.error("Invalid step index:", stepIndex);
+      return;
+    }
+
+    if (action === "start_step") {
+      // When starting a step, don't show notes yet
+      console.log(`🏁 Step ${stepIndex} started - notes will appear on completion`);
+      // Do nothing - notes will appear only after completion
+    } else if (action === "complete_step") {
+      // When completing a step, now show the notes for this step
+      setCurrentStepIndex(stepIndex + 1);
+      console.log(`✅ Step ${stepIndex} completed - showing notes (currentStepIndex: ${stepIndex + 1})`);
+    }
+  }, []);
+
   // Expose handler functions globally for agents to call
   useEffect(() => {
     window.handleStepCompletion = handleStepCompletion;
     window.handleVisualFeedback = handleVisualFeedback;
     window.handleIntroVisual = handleIntroVisual;
+    window.handleUpdateStepIndex = handleUpdateStepIndex;
 
     return () => {
       delete window.handleStepCompletion;
       delete window.handleVisualFeedback;
       delete window.handleIntroVisual;
+      delete window.handleUpdateStepIndex;
     };
-  }, [handleStepCompletion, handleVisualFeedback, handleIntroVisual]);
+  }, [handleStepCompletion, handleVisualFeedback, handleIntroVisual, handleUpdateStepIndex]);
 
   // Push-to-talk keyboard event handlers
   useEffect(() => {
@@ -856,7 +893,7 @@ function App() {
               </div>
               <span className="smart-tut-label-divider"></span>
               <p className="smart-tut-label">
-                {"meeting with Knova about the States of matter"}
+                {"1:1 tutoring with Knova - States of matter"}
               </p>
             </div>
             {/* <div className="header-title-timer-cont">
@@ -865,6 +902,12 @@ function App() {
             </div> */}
           </div>
           <div className="meeting-canvas-cont">
+            {/* Visual feedback display area - CENTER MAIN AREA */}
+            {visualFeedback && (
+              <div className="visual-feedback-container">
+                <VisualFeedback feedback={visualFeedback} />
+              </div>
+            )}
             {/* {Object.keys(smartTutorCompData).length > 0 && renderCompData()} */}
           </div>
           {renderUserCamera()}
@@ -943,160 +986,153 @@ function App() {
     </div>
   );
 
-  return (
-    <div className="app-container">
-      <div className={`main-layout ${notesVisible ? "notes-open" : ""}`}>
-        <div className="content-area">
-          <div
-            className={`video-call-container ${
-              isConnected ? "connected" : ""
-            } ${isPushToTalkActive ? "ptt-active" : ""} ${
-              isMicrophoneMuted ? "ptt-muted" : ""
-            }`}
-          >
-            <div className="video-call-header">
-              {sessionError ? (
-                <div className="header-content">
-                  <h1>Session Error</h1>
-                  <p className="status-message">
-                    Failed to initialize: {sessionError}
-                  </p>
-                </div>
-              ) : (
-                <div className="header-content">
-                  <h1>AI Tutoring Session</h1>
-                  <p className="status-message">{message}</p>
-                </div>
-              )}
-              <div className="header-controls">
-                {isConnected && (
-                  <div className="timer">
-                    <span className="timer-dot"></span>
-                    Connected
-                  </div>
-                )}
-              </div>
-            </div>{" "}
-            <div className="video-frame">
-              <div className="ai-avatar">
-                {isConnected ? (
-                  <div className="avatar-active">
-                    <div className="avatar-image">
-                      <span className="avatar-initial">AI</span>
-                    </div>
-                    <div className="speaking-indicator">
-                      <div className="wave"></div>
-                      <div className="wave"></div>
-                      <div className="wave"></div>
-                    </div>
-                  </div>
-                ) : (
-                  <div className="avatar-inactive">
-                    <span className="avatar-initial">AI</span>
-                  </div>
-                )}
-                <p className="avatar-name">AI Tutor</p>
-              </div>
+  // return (
+  //   <div className="app-container">
+  //     <div className={`main-layout ${notesVisible ? "notes-open" : ""}`}>
+  //       <div className="content-area">
+  //         <div
+  //           className={`video-call-container ${
+  //             isConnected ? "connected" : ""
+  //           } ${isPushToTalkActive ? "ptt-active" : ""} ${
+  //             isMicrophoneMuted ? "ptt-muted" : ""
+  //           }`}
+  //         >
+  //           <div className="video-call-header">
+  //             {sessionError ? (
+  //               <div className="header-content">
+  //                 <h1>Session Error</h1>
+  //                 <p className="status-message">
+  //                   Failed to initialize: {sessionError}
+  //                 </p>
+  //               </div>
+  //             ) : (
+  //               <div className="header-content">
+  //                 <h1>AI Tutoring Session</h1>
+  //                 <p className="status-message">{message}</p>
+  //               </div>
+  //             )}
+  //             <div className="header-controls">
+  //               {isConnected && (
+  //                 <div className="timer">
+  //                   <span className="timer-dot"></span>
+  //                   Connected
+  //                 </div>
+  //               )}
+  //             </div>
+  //           </div>{" "}
+  //           <div className="video-frame">
+  //             <div className="ai-avatar">
+  //               {isConnected ? (
+  //                 <div className="avatar-active">
+  //                   <div className="avatar-image">
+  //                     <span className="avatar-initial">AI</span>
+  //                   </div>
+  //                   <div className="speaking-indicator">
+  //                     <div className="wave"></div>
+  //                     <div className="wave"></div>
+  //                     <div className="wave"></div>
+  //                   </div>
+  //                 </div>
+  //               ) : (
+  //                 <div className="avatar-inactive">
+  //                   <span className="avatar-initial">AI</span>
+  //                 </div>
+  //               )}
+  //               <p className="avatar-name">AI Tutor</p>
+  //             </div>
+  //           </div>
+  //           <div className="call-controls">
+  //             <button
+  //               className={`call-button connect-button ${
+  //                 isConnected ? "disabled" : ""
+  //               }`}
+  //               onClick={handleConnect}
+  //               disabled={isLoading || isConnected || !clientSecret}
+  //             >
+  //               <svg
+  //                 xmlns="http://www.w3.org/2000/svg"
+  //                 viewBox="0 0 24 24"
+  //                 fill="currentColor"
+  //               >
+  //                 <path d="M20 15.5c-1.2 0-2.5-.2-3.6-.6h-.3c-.3 0-.5.1-.7.3l-2.2 2.2c-2.8-1.5-5.2-3.8-6.6-6.6l2.2-2.2c.3-.3.4-.7.2-1-.3-1.1-.5-2.3-.5-3.6 0-.5-.4-1-1-1H4c-.5 0-1 .5-1 1 0 9.4 7.6 17 17 17 .5 0 1-.5 1-1v-3.5c0-.5-.4-1-1-1zM12 3v10l3-3h6V3h-9z" />
+  //               </svg>
+  //               Connect
+  //             </button>
 
-              {/* Visual feedback display area */}
-              {visualFeedback && (
-                <div className="visual-feedback-container">
-                  <VisualFeedback feedback={visualFeedback} />
-                </div>
-              )}
-            </div>
-            <div className="call-controls">
-              <button
-                className={`call-button connect-button ${
-                  isConnected ? "disabled" : ""
-                }`}
-                onClick={handleConnect}
-                disabled={isLoading || isConnected || !clientSecret}
-              >
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  viewBox="0 0 24 24"
-                  fill="currentColor"
-                >
-                  <path d="M20 15.5c-1.2 0-2.5-.2-3.6-.6h-.3c-.3 0-.5.1-.7.3l-2.2 2.2c-2.8-1.5-5.2-3.8-6.6-6.6l2.2-2.2c.3-.3.4-.7.2-1-.3-1.1-.5-2.3-.5-3.6 0-.5-.4-1-1-1H4c-.5 0-1 .5-1 1 0 9.4 7.6 17 17 17 .5 0 1-.5 1-1v-3.5c0-.5-.4-1-1-1zM12 3v10l3-3h6V3h-9z" />
-                </svg>
-                Connect
-              </button>
+  //             <button
+  //               className={`call-button disconnect-button ${
+  //                 !isConnected ? "disabled" : ""
+  //               }`}
+  //               onClick={handleDisconnect}
+  //               disabled={isLoading || !isConnected}
+  //             >
+  //               <svg
+  //                 xmlns="http://www.w3.org/2000/svg"
+  //                 viewBox="0 0 24 24"
+  //                 fill="currentColor"
+  //               >
+  //                 <path d="M12 9c-1.6 0-3.15.25-4.6.72v3.1c0 .39-.23.74-.56.9-.98.49-1.87 1.12-2.66 1.85-.18.18-.43.28-.7.28-.28 0-.53-.11-.71-.29L.29 13.08c-.18-.17-.29-.42-.29-.7 0-.28.11-.53.29-.71C3.34 8.78 7.46 7 12 7s8.66 1.78 11.71 4.67c.18.18.29.43.29.71 0 .28-.11.53-.29.71l-2.48 2.48c-.18.18-.43.29-.71.29-.27 0-.52-.1-.7-.28-.79-.73-1.68-1.36-2.66-1.85-.33-.16-.56-.5-.56-.9v-3.1C15.15 9.25 13.6 9 12 9z" />
+  //               </svg>
+  //               Disconnect
+  //             </button>
 
-              <button
-                className={`call-button disconnect-button ${
-                  !isConnected ? "disabled" : ""
-                }`}
-                onClick={handleDisconnect}
-                disabled={isLoading || !isConnected}
-              >
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  viewBox="0 0 24 24"
-                  fill="currentColor"
-                >
-                  <path d="M12 9c-1.6 0-3.15.25-4.6.72v3.1c0 .39-.23.74-.56.9-.98.49-1.87 1.12-2.66 1.85-.18.18-.43.28-.7.28-.28 0-.53-.11-.71-.29L.29 13.08c-.18-.17-.29-.42-.29-.7 0-.28.11-.53.29-.71C3.34 8.78 7.46 7 12 7s8.66 1.78 11.71 4.67c.18.18.29.43.29.71 0 .28-.11.53-.29.71l-2.48 2.48c-.18.18-.43.29-.71.29-.27 0-.52-.1-.7-.28-.79-.73-1.68-1.36-2.66-1.85-.33-.16-.56-.5-.56-.9v-3.1C15.15 9.25 13.6 9 12 9z" />
-                </svg>
-                Disconnect
-              </button>
+  //             {/* Push-to-Talk Controls */}
+  //             {isConnected && (
+  //               <>
+  //                 <button
+  //                   className={`call-button mic-button ${
+  //                     isPushToTalkActive ? "active" : "muted"
+  //                   }`}
+  //                   onClick={undefined}
+  //                   disabled={true}
+  //                   title={`Hold ${
+  //                     pushToTalkKey === "Space" ? "Spacebar" : pushToTalkKey
+  //                   } to talk`}
+  //                 >
+  //                   {isPushToTalkActive ? (
+  //                     <svg
+  //                       xmlns="http://www.w3.org/2000/svg"
+  //                       viewBox="0 0 24 24"
+  //                       fill="currentColor"
+  //                     >
+  //                       <path d="M12 14c1.66 0 3-1.34 3-3V5c0-1.66-1.34-3-3-3S9 3.34 9 5v6c0 1.66 1.34 3 3 3zm-1-9c0-.55.45-1 1-1s1 .45 1 1v6c0 .55-.45 1-1 1s-1-.45-1-1V5zm6 6c0 2.76-2.24 5-5 5s-5-2.24-5-5H5c0 3.53 2.61 6.43 6 6.92V21h2v-3.08c3.39-.49 6-3.39 6-6.92h-2z" />
+  //                     </svg>
+  //                   ) : (
+  //                     <svg
+  //                       xmlns="http://www.w3.org/2000/svg"
+  //                       viewBox="0 0 24 24"
+  //                       fill="currentColor"
+  //                     >
+  //                       <path d="M19 11h-1.7c0 .74-.16 1.43-.43 2.05l1.23 1.23c.56-.98.9-2.09.9-3.28zm-4.02.17c0-.06.02-.11.02-.17V5c0-1.66-1.34-3-3-3S9 3.34 9 5v.18l5.98 5.99zM4.27 3L3 4.27l6.01 6.01V11c0 1.66 1.33 3 2.99 3 .22 0 .44-.03.65-.08l1.66 1.66c-.71.33-1.5.52-2.31.52-2.76 0-5.3-2.1-5.3-5.1H5c0 3.41 2.72 6.23 6 6.72V21h2v-3.28c.91-.13 1.77-.45 2.54-.9L19.73 21 21 19.73 4.27 3z" />
+  //                     </svg>
+  //                   )}
+  //                   {isPushToTalkActive ? "TALKING" : "HOLD SPACE"}
+  //                 </button>
+  //               </>
+  //             )}
 
-              {/* Push-to-Talk Controls */}
-              {isConnected && (
-                <>
-                  <button
-                    className={`call-button mic-button ${
-                      isPushToTalkActive ? "active" : "muted"
-                    }`}
-                    onClick={undefined}
-                    disabled={true}
-                    title={`Hold ${
-                      pushToTalkKey === "Space" ? "Spacebar" : pushToTalkKey
-                    } to talk`}
-                  >
-                    {isPushToTalkActive ? (
-                      <svg
-                        xmlns="http://www.w3.org/2000/svg"
-                        viewBox="0 0 24 24"
-                        fill="currentColor"
-                      >
-                        <path d="M12 14c1.66 0 3-1.34 3-3V5c0-1.66-1.34-3-3-3S9 3.34 9 5v6c0 1.66 1.34 3 3 3zm-1-9c0-.55.45-1 1-1s1 .45 1 1v6c0 .55-.45 1-1 1s-1-.45-1-1V5zm6 6c0 2.76-2.24 5-5 5s-5-2.24-5-5H5c0 3.53 2.61 6.43 6 6.92V21h2v-3.08c3.39-.49 6-3.39 6-6.92h-2z" />
-                      </svg>
-                    ) : (
-                      <svg
-                        xmlns="http://www.w3.org/2000/svg"
-                        viewBox="0 0 24 24"
-                        fill="currentColor"
-                      >
-                        <path d="M19 11h-1.7c0 .74-.16 1.43-.43 2.05l1.23 1.23c.56-.98.9-2.09.9-3.28zm-4.02.17c0-.06.02-.11.02-.17V5c0-1.66-1.34-3-3-3S9 3.34 9 5v.18l5.98 5.99zM4.27 3L3 4.27l6.01 6.01V11c0 1.66 1.33 3 2.99 3 .22 0 .44-.03.65-.08l1.66 1.66c-.71.33-1.5.52-2.31.52-2.76 0-5.3-2.1-5.3-5.1H5c0 3.41 2.72 6.23 6 6.72V21h2v-3.28c.91-.13 1.77-.45 2.54-.9L19.73 21 21 19.73 4.27 3z" />
-                      </svg>
-                    )}
-                    {isPushToTalkActive ? "TALKING" : "HOLD SPACE"}
-                  </button>
-                </>
-              )}
+  //             <button
+  //               className="notes-toggle-main"
+  //               onClick={() => setNotesVisible(!notesVisible)}
+  //               title={notesVisible ? "Hide Notes" : "Show Notes"}
+  //             >
+  //               <svg
+  //                 xmlns="http://www.w3.org/2000/svg"
+  //                 viewBox="0 0 24 24"
+  //                 fill="currentColor"
+  //               >
+  //                 <path d="M14,2H6A2,2 0 0,0 4,4V20A2,2 0 0,0 6,22H18A2,2 0 0,0 20,20V8L14,2M18,20H6V4H13V9H18V20Z" />
+  //               </svg>
+  //               Notes
+  //             </button>
+  //           </div>
+  //         </div>
+  //       </div>
 
-              <button
-                className="notes-toggle-main"
-                onClick={() => setNotesVisible(!notesVisible)}
-                title={notesVisible ? "Hide Notes" : "Show Notes"}
-              >
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  viewBox="0 0 24 24"
-                  fill="currentColor"
-                >
-                  <path d="M14,2H6A2,2 0 0,0 4,4V20A2,2 0 0,0 6,22H18A2,2 0 0,0 20,20V8L14,2M18,20H6V4H13V9H18V20Z" />
-                </svg>
-                Notes
-              </button>
-            </div>
-          </div>
-        </div>
-
-        <NotesArea isVisible={notesVisible} completedSteps={completedSteps} />
-      </div>
-    </div>
-  );
+  //       <NotesArea isVisible={notesVisible} completedSteps={completedSteps} />
+  //     </div>
+  //   </div>
+  // );
 }
 
 export default App;

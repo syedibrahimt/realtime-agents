@@ -53,6 +53,33 @@
   padding: 25px;
 }
 
+.visual-feedback.question {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  border: 3px solid #5a67d8;
+  box-shadow: 0 0 30px rgba(102, 126, 234, 0.4);
+  max-width: 800px;
+  width: 90%;
+  padding: 30px;
+  text-align: left;
+}
+
+.visual-feedback.question .feedback-content {
+  font-size: 1.3rem;
+  line-height: 1.8;
+  white-space: pre-line;
+  color: #ffffff;
+  font-weight: 600;
+}
+
+.visual-feedback.question .feedback-label {
+  font-weight: 700;
+  font-size: 1rem;
+  margin-top: 20px;
+  opacity: 0.95;
+  color: #e0e7ff;
+  text-align: center;
+}
+
 .feedback-content {
   font-size: 20px;
   font-weight: 500;

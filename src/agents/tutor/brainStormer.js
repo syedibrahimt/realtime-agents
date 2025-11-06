@@ -2,111 +2,42 @@ import { RealtimeAgent, tool } from "@openai/agents/realtime"
 import problemData from "../../../hard4.json"
 import { closerAgent } from "./closer"
 
-const updateBrainstormNotesTool = tool({
-  name: "updateBrainstormNotes",
+const updateStepIndexTool = tool({
+  name: "updateStepIndex",
   description:
-    "Captures student discoveries, ideas, and progress through brainstorming and debate.",
+    "Updates the current step index to display notes one by one as the student progresses through conceptual questions.",
   parameters: {
     type: "object",
     properties: {
-      discoveryType: {
-        type: "string",
-        description: "Type of discovery or interaction made",
-        enum: [
-          "initial_observation",
-          "part_identified",
-          "calculation_done",
-          "pattern_found",
-          "breakthrough",
-          "debate_point",
-          "approach_comparison",
-          "synthesis",
-        ],
-      },
-      studentIdeas: {
-        type: "array",
-        description: "Ideas and thoughts the student shared",
-        items: {
-          type: "string",
-        },
-      },
-      debateElements: {
-        type: "object",
-        description:
-          "Debate elements if this discovery involved comparing approaches",
-        properties: {
-          approach1: {
-            type: "string",
-            description: "First approach or perspective discussed",
-          },
-          approach2: {
-            type: "string",
-            description: "Second approach or perspective discussed",
-          },
-          studentPreference: {
-            type: "string",
-            description: "Which approach the student prefers and why",
-          },
-          synthesis: {
-            type: "string",
-            description: "How the approaches were combined or resolved",
-          },
-        },
-      },
-      partSolved: {
-        type: "string",
-        description: "The specific part of the problem they just worked on",
-      },
-      currentExpression: {
-        type: "string",
-        description: "Current state of the problem/expression/understanding",
-      },
-      approach: {
-        type: "string",
-        description: "The approach or strategy discovered/used",
-      },
-      stepNumber: {
+      stepIndex: {
         type: "number",
         description:
-          "Which step in the JSON structure this relates to (1-based)",
+          "The step index to display (0-based, allows up to 10 steps)",
+        minimum: 0,
+        maximum: 9,
+      },
+      action: {
+        type: "string",
+        description: "The action being performed",
+        enum: ["start_step", "complete_step"],
       },
     },
-    required: ["discoveryType", "stepNumber"],
+    required: ["stepIndex", "action"],
     additionalProperties: false,
   },
   execute: async (input) => {
-    const {
-      discoveryType,
-      studentIdeas,
-      debateElements,
-      partSolved,
-      currentExpression,
-      approach,
-      stepNumber,
-    } = input
-    console.log(`🔧 Tool Called - Brainstorm ${discoveryType}:`, input)
+    const { stepIndex, action } = input
+    console.log(`🔧 Tool Called - Update Step Index:`, input)
 
-    // Trigger UI update through global callback if available
-    if (typeof window !== "undefined" && window.handleBrainstormUpdate) {
-      window.handleBrainstormUpdate(
-        discoveryType,
-        studentIdeas || [],
-        partSolved,
-        currentExpression,
-        approach,
-        stepNumber,
-        debateElements
-      )
-      console.log(`✅ Captured ${discoveryType} for step ${stepNumber}`)
+    if (typeof window !== "undefined" && window.handleUpdateStepIndex) {
+      window.handleUpdateStepIndex(stepIndex, action)
+      console.log(`✅ Updated step index to ${stepIndex} (${action})`)
     }
 
     return {
       success: true,
-      message: `Captured student ${discoveryType}${
-        partSolved ? ` on ${partSolved}` : ""
-      }`,
-      currentExpression: currentExpression,
-      stepNumber: stepNumber,
+      message: `Step index updated to ${stepIndex}`,
+      stepIndex: stepIndex,
     }
   },
 })
@@ -114,63 +45,131 @@ const updateBrainstormNotesTool = tool({
 const showVisualFeedbackTool = tool({
   name: "showVisualFeedback",
   description:
-    "Shows visual feedback for discoveries, debates, and breakthroughs during brainstorming.",
+    "Shows visual feedback from hard4.json ConceptualQuestions structure. Use 'before' type when starting a question, 'hint' when student needs guidance, 'success' when student answers correctly.",
   parameters: {
     type: "object",
     properties: {
-      type: {
-        type: "string",
-        description: "Type of visual feedback",
-        enum: [
-          "celebration",
-          "discovery",
-          "progress",
-          "breakthrough",
-          "debate",
-          "comparison",
-          "synthesis",
-        ],
-      },
-      content: {
-        type: "string",
-        description: "The visual content (emoji, symbol, or text)",
-      },
-      label: {
-        type: "string",
-        description: "Message about the discovery or insight",
-      },
-      expressionPart: {
-        type: "string",
-        description: "The part of the problem this relates to",
-      },
-      stepNumber: {
+      stepIndex: {
         type: "number",
-        description: "Which step this feedback relates to",
+        description: "The step index (0-based, allows up to 10 steps)",
+        minimum: 0,
+        maximum: 9,
+      },
+      questionIndex: {
+        type: "number",
+        description:
+          "The question index within the step's ConceptualQuestions array (0-based, typically 0-1 as most steps have 2 questions)",
+        minimum: 0,
+        maximum: 1,
+      },
+      feedbackType: {
+        type: "string",
+        description: "Type of feedback to show",
+        enum: ["before", "hint", "success"],
       },
     },
-    required: ["type", "content", "label"],
+    required: ["stepIndex", "questionIndex", "feedbackType"],
     additionalProperties: false,
   },
   execute: async (input) => {
-    const { type, content, label, expressionPart, stepNumber } = input
-    console.log(`🔧 Tool Called - Showing ${type} feedback:`, input)
+    const { stepIndex, questionIndex, feedbackType } = input
+    console.log(`🔧 Tool Called - Show Visual Feedback:`, input)
 
-    // Trigger UI update through global callback if available
+    // Access hard4.json data
+    const step = problemData.steps[stepIndex]
+    if (!step || !step.ConceptualQuestions[questionIndex]) {
+      console.error(`Invalid step or question index`)
+      return {
+        success: false,
+        message: "Invalid step or question index",
+      }
+    }
+
+    const question = step.ConceptualQuestions[questionIndex]
+    let feedbackData
+
+    // Get the appropriate feedback based on type
+    if (feedbackType === "before") {
+      feedbackData = question.Illustration.BeforeQuestion
+    } else if (feedbackType === "hint") {
+      feedbackData = question.Illustration.Feedback.Hint
+    } else if (feedbackType === "success") {
+      feedbackData = question.Illustration.Feedback.Success
+    }
+
+    if (!feedbackData) {
+      console.error(`No feedback data found for type: ${feedbackType}`)
+      return {
+        success: false,
+        message: "No feedback data found",
+      }
+    }
+
+    // Call the global handler with the structured data
     if (typeof window !== "undefined" && window.handleVisualFeedback) {
       window.handleVisualFeedback(
-        type,
-        content,
-        label,
-        stepNumber,
-        undefined,
-        expressionPart
+        feedbackType, // type: 'before', 'hint', or 'success'
+        feedbackData.Content,
+        feedbackData.Label,
+        stepIndex,
+        questionIndex
       )
-      console.log(`✅ Showed ${type} feedback for step ${stepNumber}`)
+      console.log(
+        `✅ Showed ${feedbackType} feedback for step ${stepIndex}, question ${questionIndex}`
+      )
     }
 
     return {
       success: true,
-      message: `${type} feedback shown successfully`,
+      message: `${feedbackType} feedback shown successfully`,
+      stepIndex,
+      questionIndex,
+    }
+  },
+})
+
+const showQuestionWithOptionsTool = tool({
+  name: "showQuestionWithOptions",
+  description:
+    "Displays the main problem question with all multiple choice options at the session start. After calling this tool, YOU MUST read the question and all options aloud to the student. Call this once after greeting, before starting the ASK phase.",
+  parameters: {
+    type: "object",
+    properties: {},
+    additionalProperties: false,
+  },
+  execute: async () => {
+    console.log(`🔧 Tool Called - Show Question with Options`)
+
+    const questionText = problemData.questionData.QuestionText
+    const options = problemData.questionData.Options.map(
+      (opt, i) => `${String.fromCharCode(65 + i)}) ${opt.Option}`
+    ).join("\n")
+
+    const displayContent = `${questionText}\n\n${options}`
+
+    // Call the global handler with the structured data
+    if (typeof window !== "undefined" && window.handleVisualFeedback) {
+      window.handleVisualFeedback(
+        "question", // type: 'question'
+        displayContent,
+        "Main Problem",
+        null,
+        null
+      )
+      console.log(`✅ Showed question with all options`)
+    }
+
+    // Prepare the text that should be read aloud
+    const readAloudText = `${questionText}\n\nThe options are:\n${problemData.questionData.Options.map(
+      (opt, i) => `${String.fromCharCode(65 + i)}: ${opt.Option}`
+    ).join("\n")}`
+
+    return {
+      success: true,
+      message: "Question with options displayed successfully",
+      readAloud: readAloudText,
+      instruction:
+        "Now read the question and all options aloud to the student, then ask for their first thought.",
     }
   },
 })
@@ -180,136 +179,51 @@ export const brainStormerAgent = new RealtimeAgent({
   voice: "sage",
   handoffDescription:
     "A natural brainstorming tutor that guides students through discovery using the ASK → EXPLORE → CONNECT framework.",
-  instructions: `You have to speak only in English. You are a natural brainstorming tutor who guides students through discovery using a proven framework.
+  instructions: `You are a brainstorming tutor using the ASK → EXPLORE → CONNECT framework. Speak only in English.
 
-**Problem**: ${problemData.questionData.QuestionText}
 **Topic**: ${problemData.topic} - ${problemData.title}
 
-## Your Natural Teaching Flow: ASK → EXPLORE → CONNECT
+## SESSION START
+1. Greet warmly: "Hi Welcome to this tutoring session. Let's go through this together!"
+2. **IMPORTANT**: Read the full question and ALL four options (A, B, C, D) aloud clearly by Calling showQuestionWithOptions tool
+3. Ask: "What's your first thought about this?"
 
-You follow a natural conversation pattern that feels organic, never mechanical:
-
-### PHASE 1: ASK (Problem Introduction & Setup) 
-**Start by reading the problem statement clearly:**
-1. Read the full problem: "${problemData.questionData.QuestionText}"
-2. Ask: "What do you already know about this topic?"
-3. Listen to 2-3 initial thoughts without judgment
-4. Build excitement: "Let's explore this together!"
-
-Tool Usage in Phase 1:
-- Call updateBrainstormNotes with:
-  - discoveryType: "initial_observation"
-  - studentIdeas: [their initial thoughts]
-  - stepNumber: 1
-- Call showVisualFeedback with:
-  - type: "discovery"
-  - content: "💡"
-  - label: "Initial thoughts captured!"
-  - stepNumber: 1
-
-### PHASE 2: EXPLORE (Guided Discovery Through Ideas)
-Work through the learning areas naturally, using rapid-fire discovery questions:
-
-Tool Usage in Phase 2:
-For each discovery/breakthrough:
-- Call updateBrainstormNotes with:
-  - discoveryType: "breakthrough" or "pattern_found"
-  - currentExpression: [current state of understanding]
-  - approach: [their current strategy]
-  - stepNumber: [current step]
-- Call showVisualFeedback with:
-  - type: "breakthrough" or "discovery"
-  - content: "✨" or "🎯"
-  - label: [specific insight]
-  - stepNumber: [current step]
+## LEARNING JOURNEY: Work Through All Steps
 
 ${problemData.steps
   .map(
-    (step) => `
-**Topic Area: ${step.Topic}**
-- Discovery Focus: ${step.Description}
-- Key Question: "${step.ConceptualQuestions[0].Question}"
-- Show illustration: "${step.ConceptualQuestions[0].Illustration.BeforeQuestion.Content}"
-- Explore with: "What if we tried...?", "How is this like something you know?", "What would happen if...?"
-- Build toward understanding: ${step.Notes.UpdatedExpression}
+    (step, idx) => `
+**Step ${idx}: ${step.Topic}**
+${step.Description}
+${step.ConceptualQuestions.map(
+  (cq, qIdx) => `
+  Q${qIdx + 1}: "${cq.Question}" (Goal: ${cq.Goal})
+  → Show: showVisualFeedback(${idx}, ${qIdx}, "before") - "${cq.Illustration.BeforeQuestion.Content}"
+  → If struggling: feedbackType="hint" - "${cq.Illustration.Feedback.Hint.Content}"
+  → When correct: feedbackType="success" - "${cq.Illustration.Feedback.Success.Content}"`
+).join("")}
+
+Build toward: ${step.Notes.UpdatedExpression}
+After both questions: updateStepIndex(${idx}, "complete_step")
 `
   )
   .join("")}
 
-### PHASE 3: CONNECT (Pattern Recognition & Synthesis)
-- "Which ideas feel strongest? Why?"
-- "What pattern do you see emerging?"
-- "How do all these discoveries connect?"
-- "What did we discover together?"
+## CONVERSATION STYLE
+- Discovery questions: "What if...?", "How does this connect...?", "What pattern do you see?"
+- Build on responses: "Yes, and...", "Ooh, that's one way!", "You're onto something!"
+- Natural transitions: "Building on that...", "Let's explore further..."
+- Never say "step" - keep it conversational
 
-Tool Usage in Phase 3:
-- Call updateBrainstormNotes with:
-  - discoveryType: "synthesis"
-  - studentIdeas: [their synthesized understanding]
-  - currentExpression: [final state of understanding]
-  - stepNumber: ${problemData.steps.length}
-- Call showVisualFeedback with:
-  - type: "synthesis"
-  - content: "🌟"
-  - label: "Everything Connected!"
-  - stepNumber: ${problemData.steps.length}
-
-## Natural Conversation Techniques
-
-### Discovery Questions (Use Throughout):
-- "What comes to mind when I say...?"
-- "Tell me more about that"
-- "How does this connect to...?"
-- "What pattern do you see?"
-- "That's interesting because..."
-
-### Building on Student Ideas:
-- "Yes, and..." (expand their thinking)
-- "Ooh, that's one way! What about...?" (introduce alternatives)
-- "Let's test that idea - what if...?" (explore deeper)
-- "You're onto something! How does that work with...?" (connect to other concepts)
-
-### Natural Transitions (Never say "step"):
-- "Now that we've discovered X, what about Y?"
-- "That gives me another idea to explore..."
-- "Building on that thought..."
-- "Let's take this further..."
-
-## When Multiple Approaches Emerge:
-- "Hmm, there are different ways we could think about this..."
-- "Some people might say X, while others think Y... what do you think?"
-- "Let's compare these ideas and see what happens!"
-- Use showVisualFeedback with type="debate" or "comparison"
-
-## Tool Usage Guidelines
-
-### updateBrainstormNotes:
-- Use for every significant discovery
-- Track the natural progression of understanding
-- Include debateElements when comparing approaches
-- Always specify the current stepNumber (1-${problemData.steps.length})
-
-### showVisualFeedback:
-- "discovery" - for initial observations and aha moments
-- "debate" - when naturally comparing different approaches  
-- "breakthrough" - for major insights and connections
-- "synthesis" - when connecting multiple ideas together
-
-## Your Personality & Style:
-- **Curious & Enthusiastic**: Show genuine excitement for their ideas
-- **Patient Builder**: Build on every response, no matter how small
-- **Question-Driven**: Ask 1 question for every 1 thing you tell them
-- **Celebration-Focused**: Celebrate the thinking process, not just correct answers
-- **Natural Conversationalist**: Make it feel like an engaging discussion, not a lesson
-
-## Conversation Boundaries:
-- Work through all learning areas naturally
-- Allow 1-2 exchanges per topic area
-- Keep energy high and momentum building
-- End with synthesis and clear sense of discovery
-- Prepare for handoff to closer agent
-
-Remember: This should feel like an exciting conversation with a curious friend who happens to know how to guide discovery. Never mention "steps" or make it feel like a curriculum. Let their natural curiosity drive the exploration!`,
+## KEY REMINDERS
+- For EACH question: Show "before" visual → Ask question → Give "hint" or "success" feedback
+- Complete step only after BOTH questions answered
+- Celebrate thinking process, not just correct answers
+- Make it feel like discovery, not a lesson`,
   // handoffs: [closerAgent],
-  tools: [updateBrainstormNotesTool, showVisualFeedbackTool],
+  tools: [
+    updateStepIndexTool,
+    showVisualFeedbackTool,
+    showQuestionWithOptionsTool,
+  ],
 })
