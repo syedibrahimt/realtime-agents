@@ -942,16 +942,39 @@ body {
   height: 40px;
   background: #262947;
 }
+.smart-tut-label-cont{
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: row;
+  justify-content: center;
+  align-items: center;
+}
 .smart-tut-label {
+  width: 40%;
   color: #f3f4f8;
   /* Caption */
   font-family: Poppins;
-  font-size: 12px;
+  font-size: 18px;
+  font-style: normal;
+  font-weight:bolder;
+  line-height: 100%; /* 12px */
+  text-transform: capitalize;
+  margin: 0 !important;
+  text-align: left;
+}
+.smart-tut-label-sec {
+  width: 60%;
+  color: #f3f4f8;
+  /* Caption */
+  font-family: Poppins;
+  font-size: 20px;
   font-style: normal;
   font-weight: 500;
   line-height: 100%; /* 12px */
   text-transform: capitalize;
   margin: 0 !important;
+  text-align: left;
 }
 .header-title-timer-cont {
   height: 100%;

@@ -407,12 +407,18 @@ function App() {
 
     if (action === "start_step") {
       // When starting a step, don't show notes yet
-      console.log(`🏁 Step ${stepIndex} started - notes will appear on completion`);
+      console.log(
+        `🏁 Step ${stepIndex} started - notes will appear on completion`
+      );
       // Do nothing - notes will appear only after completion
     } else if (action === "complete_step") {
       // When completing a step, now show the notes for this step
       setCurrentStepIndex(stepIndex + 1);
-      console.log(`✅ Step ${stepIndex} completed - showing notes (currentStepIndex: ${stepIndex + 1})`);
+      console.log(
+        `✅ Step ${stepIndex} completed - showing notes (currentStepIndex: ${
+          stepIndex + 1
+        })`
+      );
     }
   }, []);
 
@@ -429,7 +435,12 @@ function App() {
       delete window.handleIntroVisual;
       delete window.handleUpdateStepIndex;
     };
-  }, [handleStepCompletion, handleVisualFeedback, handleIntroVisual, handleUpdateStepIndex]);
+  }, [
+    handleStepCompletion,
+    handleVisualFeedback,
+    handleIntroVisual,
+    handleUpdateStepIndex,
+  ]);
 
   // Push-to-talk keyboard event handlers
   useEffect(() => {
@@ -892,9 +903,10 @@ function App() {
                 ></img>
               </div>
               <span className="smart-tut-label-divider"></span>
-              <p className="smart-tut-label">
-                {"1:1 tutoring with Knova - States of matter"}
-              </p>
+              <div className="smart-tut-label-cont">
+                <p className="smart-tut-label">{"1:1 tutoring with Knova"}</p>
+                <p className="smart-tut-label-sec">States of matter</p>
+              </div>
             </div>
             {/* <div className="header-title-timer-cont">
               <Time className="meet-timer-logo" />
