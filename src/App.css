@@ -923,7 +923,7 @@ body {
 }
 .smart-tutor-logo-cont {
   display: flex;
-  width: 150px;
+  width: 200px;
   height: 120px;
   padding: 2.149px 0px;
   flex-direction: column;
@@ -951,24 +951,24 @@ body {
   align-items: center;
 }
 .smart-tut-label {
-  width: 40%;
+  width: 100%;
   color: #f3f4f8;
   /* Caption */
   font-family: Poppins;
-  font-size: 18px;
+  font-size: 20px;
   font-style: normal;
   font-weight:bolder;
   line-height: 100%; /* 12px */
   text-transform: capitalize;
   margin: 0 !important;
-  text-align: left;
+  text-align: center;
 }
 .smart-tut-label-sec {
   width: 60%;
   color: #f3f4f8;
   /* Caption */
   font-family: Poppins;
-  font-size: 20px;
+  font-size: 18px;
   font-style: normal;
   font-weight: 500;
   line-height: 100%; /* 12px */
@@ -1000,7 +1000,7 @@ body {
   line-height: 100%; /* 12px */
   text-transform: capitalize;
   margin: 0 !important;
-  text-align: center;
+  text-align: left;
 }
 .meeting-canvas-cont {
   width: 100%;

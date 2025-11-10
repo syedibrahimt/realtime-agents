@@ -30,6 +30,8 @@ import demo from "../hard4.json";
 const STATE_MACHINE_NAME = "State Machine 1";
 const INPUT_NAME = "Input";
 
+
+
 // Visual Feedback Component
 const VisualFeedback = ({ feedback }) => {
   if (!feedback) return null;
@@ -183,6 +185,28 @@ function App() {
   const [isMicrophoneMuted, setIsMicrophoneMuted] = useState(false);
   const [isPushToTalkActive, setIsPushToTalkActive] = useState(false);
   const [pushToTalkKey] = useState("Space");
+
+    const [secondsPractice, setSecondsPractice] = useState(0);
+  const [minutesPractice, setMinutesPractice] = useState(0);
+
+  function getTimeSpent(minutesPractice, secondsPractice) {
+    return minutesPractice + " : " + ("0" + secondsPractice).slice(-2);
+}
+
+    useEffect(() => {
+    let interval = null;
+    if (isConnected) {
+      interval = setInterval(() => {
+        if (secondsPractice > 59) {
+          setSecondsPractice(0);
+          setMinutesPractice((minutes) => minutes + 1);
+        } else {
+          setSecondsPractice((seconds) => seconds + 1);
+        }
+      }, 1000);
+    }
+    return () => clearInterval(interval);
+  }, [isConnected, secondsPractice]);
 
   // Update message for push-to-talk mode
   useEffect(() => {
@@ -904,14 +928,14 @@ function App() {
               </div>
               <span className="smart-tut-label-divider"></span>
               <div className="smart-tut-label-cont">
-                <p className="smart-tut-label">{"1:1 tutoring with Knova"}</p>
-                <p className="smart-tut-label-sec">States of matter</p>
+                <p className="smart-tut-label">{"1:1 tutoring - States of matter"}</p>
+                {/* <p className="smart-tut-label-sec">{"  "}</p> */}
               </div>
             </div>
-            {/* <div className="header-title-timer-cont">
+            <div className="header-title-timer-cont">
               <Time className="meet-timer-logo" />
-              <p className="meet-timer-label">{getTimeSpent}</p>
-            </div> */}
+              <p className="meet-timer-label">{getTimeSpent(minutesPractice,secondsPractice)}</p>
+            </div>
           </div>
           <div className="meeting-canvas-cont">
             {/* Visual feedback display area - CENTER MAIN AREA */}
