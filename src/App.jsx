@@ -928,7 +928,7 @@ function App() {
               </div>
               <span className="smart-tut-label-divider"></span>
               <div className="smart-tut-label-cont">
-                <p className="smart-tut-label">{"1:1 tutoring - States of matter"}</p>
+                <p className="smart-tut-label">{"Knova Tutor - States of matter"}</p>
                 {/* <p className="smart-tut-label-sec">{"  "}</p> */}
               </div>
             </div>

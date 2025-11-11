@@ -1075,8 +1075,8 @@ body {
 
 .meet-camera-cont {
   display: flex;
-  width: 225px;
-  height: 225px;
+  width: 150px;
+  height: 150px;
   /* padding: 16px; */
   justify-content: flex-end;
   align-items: flex-start;
