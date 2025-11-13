@@ -928,8 +928,8 @@ function App() {
               </div>
               <span className="smart-tut-label-divider"></span>
               <div className="smart-tut-label-cont">
-                <p className="smart-tut-label">{"Knova Tutor - States of matter"}</p>
-                {/* <p className="smart-tut-label-sec">{"  "}</p> */}
+                <p className="smart-tut-label">{"AI Live Tutor"}</p>
+                <p className="smart-tut-label-sec">{"States of matter"}</p>
               </div>
             </div>
             <div className="header-title-timer-cont">
